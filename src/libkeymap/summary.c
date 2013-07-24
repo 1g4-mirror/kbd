@@ -8,14 +8,15 @@
  */
 #include <string.h>
 #include <errno.h>
-
 #include <sys/ioctl.h>
 
+#include "keymap.h"
+
+#include "nls.h"
+#include "contextP.h"
 #include "ksyms.h"
 #include "modifiers.h"
 
-#include "nls.h"
-#include "keymap.h"
 
 static char
 valid_type(int fd, int t)
