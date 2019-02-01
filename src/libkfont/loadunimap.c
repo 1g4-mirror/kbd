@@ -213,7 +213,7 @@ lookattail:
 		p++;
 
 	if (*p && *p != '#') {
-		WARN(ctx, _("%s: trailing junk (%s) ignored\n"), tblname, p);
+		ERR(ctx, _("%s: trailing junk (%s) ignored\n"), tblname, p);
 	}
 
 	return 0;
@@ -244,7 +244,7 @@ kfont_load_unicodemap(struct kfont_ctx *ctx, const char *tblname)
 		if ((p = strchr(buffer, '\n')) != NULL)
 			*p = '\0';
 		else
-			WARN(ctx, _("%s: Warning: line too long"), tblname);
+			ERR(ctx, _("%s: Warning: line too long"), tblname);
 
 		rc = parseline(ctx, buffer, tblname, &map);
 
@@ -257,7 +257,7 @@ kfont_load_unicodemap(struct kfont_ctx *ctx, const char *tblname)
 	kbdfile_free(fp);
 
 	if (map.listct == 0)
-		WARN(ctx, _("loading empty unimap"));
+		ERR(ctx, _("loading empty unimap"));
 
 
 	descr.entry_ct = map.listct;
@@ -275,7 +275,8 @@ getunicodemap(struct kfont_ctx *ctx, struct unimapdesc *unimap_descr)
 	if (kfont_get_unimap(ctx, unimap_descr))
 		return -1;
 
-	DBG(ctx, "# %d %s\n", unimap_descr->entry_ct, (unimap_descr->entry_ct == 1) ? _("entry") : _("entries"));
+	if (ctx->verbose > 1)
+		INFO(ctx, "# %d %s", unimap_descr->entry_ct, (unimap_descr->entry_ct == 1) ? _("entry") : _("entries"));
 
 	return 0;
 }
@@ -295,8 +296,10 @@ kfont_dump_unicodemap(struct kfont_ctx *ctx, char *oufil)
 		return -1;
 	}
 
-	if (getunicodemap(ctx, &unimap_descr) < 0)
+	if (getunicodemap(ctx, &unimap_descr) < 0) {
+		fclose(fpo);
 		return -1;
+	}
 
 	unilist = unimap_descr.entries;
 
@@ -305,7 +308,8 @@ kfont_dump_unicodemap(struct kfont_ctx *ctx, char *oufil)
 
 	fclose(fpo);
 
-	DBG(ctx, _("Saved unicode map on `%s'\n"), oufil);
+	if (ctx->verbose > 1)
+		INFO(ctx, _("Saved unicode map on `%s'"), oufil);
 
 	return 0;
 }
@@ -317,6 +321,10 @@ append_unicodemap(struct kfont_ctx *ctx, FILE *fp, size_t fontsize, int utf8)
 	struct unipair *unilist;
 	unsigned int i;
 	int j;
+
+	int rc = 0;
+	char *debug_buf = NULL;
+	size_t debug_buflen = 0;
 
 	if (getunicodemap(ctx, &unimap_descr) < 0)
 		return -1;
@@ -331,23 +339,42 @@ append_unicodemap(struct kfont_ctx *ctx, FILE *fp, size_t fontsize, int utf8)
 			if (unilist[j].fontpos == i)
 				no++;
 		if (no > 1) {
-			if (appendseparator(fp, 1, utf8) < 0)
-				return -1;
+			if ((rc = appendseparator(fp, 1, utf8)) < 0)
+				goto end;
 		}
 #endif
-		DBG(ctx, "\nchar %03x: ", i);
-		for (j = 0; j < unimap_descr.entry_ct; j++)
-			if (unilist[j].fontpos == i) {
-				DBG(ctx, "%04x ", unilist[j].unicode);
+		if (ctx->verbose > 1) {
+			if ((rc = appendf(ctx, &debug_buf, &debug_buflen, "char %03x: ", i)) < 0)
+				goto end;
+		}
 
-				if (appendunicode(ctx, fp, unilist[j].unicode, utf8) < 0)
-					return -1;
+		for (j = 0; j < unimap_descr.entry_ct; j++) {
+			if (unilist[j].fontpos != i)
+				continue;
+
+			if (ctx->verbose > 1) {
+				if ((rc = appendf(ctx, &debug_buf, &debug_buflen, "%04x ", unilist[j].unicode)) < 0)
+					goto end;
 			}
-		if (appendseparator(ctx, fp, 0, utf8) < 0)
-			return -1;
-	}
-	if (ctx->verbose)
-		INFO(ctx, _("Appended Unicode map\n"));
 
-	return 0;
+			if ((rc = appendunicode(ctx, fp, unilist[j].unicode, utf8)) < 0)
+				goto end;
+		}
+
+		if (debug_buf && debug_buf[0] != '\0') {
+			INFO(ctx, "%s", debug_buf);
+			memset(debug_buf, 0, debug_buflen);
+		}
+
+		if ((rc = appendseparator(ctx, fp, 0, utf8)) < 0)
+			goto end;
+	}
+
+	if (ctx->verbose)
+		INFO(ctx, _("Appended Unicode map"));
+end:
+	if (debug_buf)
+		free(debug_buf);
+
+	return rc;
 }

@@ -25,9 +25,6 @@
 extern char *progname;
 extern int force;
 
-static const char *const unidirpath[]  = { "", DATADIR "/" UNIMAPDIR "/", 0 };
-static const char *const unisuffixes[] = { "", ".uni", ".sfm", 0 };
-
 int verbose = 0;
 int force   = 0;
 int debug   = 0;
@@ -77,8 +74,6 @@ int main(int argc, char *argv[])
 	if (ctx == NULL) {
 		nomem();
 	}
-
-	kfont_set_unidirs(ctx, (char **) unidirpath, (char **) unisuffixes);
 
 	if ((fd = getfd(console)) < 0)
 		kbd_error(EXIT_FAILURE, 0, _("Couldn't get a file descriptor referring to the console"));

@@ -268,7 +268,8 @@ kfont_dump_map(struct kfont_ctx *ctx, char *omfil)
 
 	fclose(fp);
 
-	DBG(ctx, _("Saved screen map in `%s'"), omfil);
+	if (ctx->verbose > 2)
+		INFO(ctx, _("Saved screen map in `%s'"), omfil);
 
 	return 0;
 }

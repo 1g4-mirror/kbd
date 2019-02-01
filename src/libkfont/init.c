@@ -11,9 +11,9 @@
 #include "libcommon.h"
 #include "contextP.h"
 
-#define UNIMAPDIR "unimaps"
-#define TRANSDIR "consoletrans"
-#define FONTDIR "consolefonts"
+#define UNIMAPDIR  "unimaps"
+#define TRANSDIR   "consoletrans"
+#define FONTDIR    "consolefonts"
 #define PARTIALDIR "partialfonts"
 
 /* search for the map file in these directories (with trailing /) */
@@ -44,22 +44,16 @@ kfont_log(struct kfont_ctx *ctx, int priority,
 	va_end(args);
 }
 
-#ifndef DEBUG
-#define log_unused __attribute__((unused))
-#else
-#define log_unused
-#endif
-
 static void __attribute__((format(printf, 6, 0)))
 log_file(void *data,
-         int priority log_unused,
-         const char *file log_unused,
-         const int line log_unused,
-         const char *fn log_unused,
+         int priority,
+         const char *file,
+         const int line,
+         const char *fn,
          const char *format, va_list args)
 {
 	FILE *fp = data;
-#ifdef DEBUG
+
 	char buf[16];
 	const char *priname;
 
@@ -93,9 +87,11 @@ log_file(void *data,
 			priname = buf;
 	}
 	fprintf(fp, "libkfont: %s %s:%d %s: ", priname, file, line, fn);
-#endif
+
 	vfprintf(fp, format, args);
 	fprintf(fp, "\n");
+
+	fflush(fp);
 }
 
 #undef log_unused
@@ -140,25 +136,6 @@ kfont_set_log_data(struct kfont_ctx *ctx, const void *data)
 	return 0;
 }
 
-int
-kfont_get_log_priority(struct kfont_ctx *ctx)
-{
-	if (!ctx)
-		return -1;
-
-	return ctx->log_priority;
-}
-
-int
-kfont_set_log_priority(struct kfont_ctx *ctx, int priority)
-{
-	if (!ctx)
-		return -1;
-
-	ctx->log_priority = priority;
-	return 0;
-}
-
 kfont_flags
 kfont_get_flags(struct kfont_ctx *ctx)
 {
@@ -175,6 +152,25 @@ kfont_set_flags(struct kfont_ctx *ctx, kfont_flags flags)
 		return -1;
 
 	ctx->flags = flags;
+	return 0;
+}
+
+int
+kfont_get_verbosity(struct kfont_ctx *ctx)
+{
+	if (!ctx)
+		return 0;
+
+	return ctx->verbose;
+}
+
+int
+kfont_set_verbosity(struct kfont_ctx *ctx, int value)
+{
+	if (!ctx)
+		return -1;
+
+	ctx->verbose = value;
 	return 0;
 }
 
@@ -266,7 +262,6 @@ kfont_context_new(void)
 	ctx->unisuffixes = (char **) unisuffixes;
 
 	kfont_set_log_fn(ctx, log_file, stderr);
-	kfont_set_log_priority(ctx, LOG_ERR);
 
 	return ctx;
 }
@@ -277,6 +272,7 @@ kfont_context_free(struct kfont_ctx *ctx)
 	if (!ctx)
 		return NULL;
 
+	kbdfile_context_free(ctx->kbdfile_ctx);
 	free(ctx);
 	return NULL;
 }

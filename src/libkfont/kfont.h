@@ -34,8 +34,8 @@ int kfont_set_log_fn(struct kfont_ctx *ctx, kfont_logger_t log_fn, const void *d
 void *kfont_get_log_data(struct kfont_ctx *ctx);
 int kfont_set_log_data(struct kfont_ctx *ctx, const void *data);
 
-int kfont_get_log_priority(struct kfont_ctx *ctx);
-int kfont_set_log_priority(struct kfont_ctx *ctx, int priority);
+int kfont_get_verbosity(struct kfont_ctx *ctx);
+int kfont_set_verbosity(struct kfont_ctx *ctx, int value);
 
 kfont_flags kfont_get_flags(struct kfont_ctx *ctx);
 int kfont_set_flags(struct kfont_ctx *ctx, kfont_flags flags);

@@ -20,10 +20,6 @@
 
 #include "paths.h"
 
-/* search for the map file in these directories (with trailing /) */
-static const char *const mapdirpath[]  = { "", DATADIR "/" TRANSDIR "/", 0 };
-static const char *const mapsuffixes[] = { "", ".trans", "_to_uni.trans", ".acm", 0 };
-
 int verbose = 0;
 int debug   = 0;
 
@@ -50,8 +46,6 @@ int main(int argc, char *argv[])
 	if (ctx == NULL) {
 		nomem();
 	}
-
-	kfont_set_mapdirs(ctx, (char **) mapdirpath, (char **) mapsuffixes);
 
 	if ((fd = getfd(NULL)) < 0)
 		kbd_error(EXIT_FAILURE, 0, _("Couldn't get a file descriptor referring to the console"));

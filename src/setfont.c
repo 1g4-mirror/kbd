@@ -35,7 +35,6 @@ extern void disactivatemap(int fd);
 
 int verbose = 0;
 int force   = 0;
-int debug   = 0;
 
 static void __attribute__((noreturn))
 usage(void)
@@ -164,6 +163,7 @@ int main(int argc, char *argv[])
 	if (ifilct && restore) {
 		fprintf(stderr, _("setfont: cannot both restore from character ROM"
 		                  " and from file. Font unchanged.\n"));
+		kfont_context_free(ctx);
 		exit(EX_USAGE);
 	}
 
@@ -171,6 +171,7 @@ int main(int argc, char *argv[])
 		kbd_error(EXIT_FAILURE, 0, _("Couldn't get a file descriptor referring to the console"));
 
 	kfont_set_console(ctx, fd);
+	kfont_set_verbosity(ctx, verbose);
 
 	int kd_mode = -1;
 	if (!ioctl(fd, KDGETMODE, &kd_mode) && (kd_mode == KD_GRAPHICS)) {
@@ -181,12 +182,13 @@ int main(int argc, char *argv[])
 		if (verbose)
 			printf("setfont: graphics console %s skipped\n", console ? console : "");
 		close(fd);
+		kfont_context_free(ctx);
 		return 0;
 	}
 
 	if (!ifilct && !mfil && !ufil && !Ofil && !ofil && !omfil && !oufil && !restore)
 		/* reset to some default */
-		ifiles[ifilct++] = "";
+		ifiles[ifilct++] = (char *) "";
 
 	if (Ofil)
 		kfont_dump_fullfont(ctx, Ofil);
@@ -195,18 +197,27 @@ int main(int argc, char *argv[])
 		kfont_dump_font(ctx, ofil);
 
 	if (omfil) {
-		if (kfont_dump_map(ctx, omfil) < 0)
+		if (kfont_dump_map(ctx, omfil) < 0) {
+			close(fd);
+			kfont_context_free(ctx);
 			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (oufil) {
-		if (kfont_dump_unicodemap(ctx, oufil) < 0)
+		if (kfont_dump_unicodemap(ctx, oufil) < 0) {
+			close(fd);
+			kfont_context_free(ctx);
 			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (mfil) {
-		if (kfont_load_map(ctx, mfil) < 0)
+		if (kfont_load_map(ctx, mfil) < 0) {
+			close(fd);
+			kfont_context_free(ctx);
 			exit(EXIT_FAILURE);
+		}
 
 		activatemap(fd);
 		no_m = 1;
@@ -225,15 +236,24 @@ int main(int argc, char *argv[])
 			kfont_set_flags(ctx, kfont_get_flags(ctx) | KFONT_FLAG_SKIP_LOAD_UNICODE_MAP);
 
 		rc = kfont_load_fonts(ctx, ifiles, ifilct, iunit, hwunit);
-		if (rc < 0)
+		if (rc < 0) {
+			close(fd);
+			kfont_context_free(ctx);
 			exit(-rc);
+		}
 	}
 
 	if (ufil) {
 		rc = kfont_load_unicodemap(ctx, ufil);
-		if (rc < 0)
+		if (rc < 0) {
+			close(fd);
+			kfont_context_free(ctx);
 			exit(-rc);
+		}
 	}
+
+	close(fd);
+	kfont_context_free(ctx);
 
 	return 0;
 }

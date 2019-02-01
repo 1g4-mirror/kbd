@@ -284,8 +284,7 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		inputlth = n = *allszp;
 	}
 
-	if (inputlth >= sizeof(struct psf1_header) &&
-	    PSF1_MAGIC_OK((unsigned char *) inputbuf)) {
+	if (inputlth >= sizeof(struct psf1_header) && PSF1_MAGIC_OK((unsigned char *) inputbuf)) {
 		struct psf1_header *psfhdr;
 
 		psfhdr = (struct psf1_header *) &inputbuf[0];
@@ -301,8 +300,7 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		ftoffset = sizeof(struct psf1_header);
 		fontwidth = 8;
 		utf8 = 0;
-	} else if (inputlth >= sizeof(struct psf2_header) &&
-	           PSF2_MAGIC_OK((unsigned char *) inputbuf)) {
+	} else if (inputlth >= sizeof(struct psf2_header) && PSF2_MAGIC_OK((unsigned char *) inputbuf)) {
 		struct psf2_header psfhdr;
 		unsigned int flags;
 

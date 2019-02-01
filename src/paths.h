@@ -5,14 +5,7 @@
  * The following five subdirectories are defined:
  */
 #define KEYMAPDIR "keymaps"
-#define UNIMAPDIR "unimaps"
-#define TRANSDIR "consoletrans"
 #define VIDEOMODEDIR "videomodes"
-#define FONTDIR "consolefonts"
-/* subdir of the latter */
-#define PARTIALDIR "partialfonts"
-/* obsolete */
-#define OLDKEYMAPDIR "keytables"
 
 /*
  * Default keymap, and where the kernel copy of it lives.
@@ -24,8 +17,5 @@
 #define DEFMAP "defkeymap.map"
 #define KERNDIR "/usr/src/linux/drivers/tty/vt"
 #endif
-
-extern int verbose;
-extern int debug;
 
 #endif /* _PATHS_H */

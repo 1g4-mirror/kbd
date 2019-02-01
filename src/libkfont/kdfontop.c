@@ -189,7 +189,7 @@ kfont_load_font(struct kfont_ctx *ctx, unsigned char *buf, size_t count, size_t 
 		height = kfont_get_charheight(buf, count, width);
 
 	/* First attempt: KDFONTOP */
-	struct console_font_op cfo;
+	struct console_font_op cfo = { 0 };
 
 	cfo.op = KD_FONT_OP_SET;
 	cfo.flags = 0;
@@ -203,7 +203,7 @@ kfont_load_font(struct kfont_ctx *ctx, unsigned char *buf, size_t count, size_t 
 
 	if (width != 8 || (errno != ENOSYS && errno != EINVAL)) {
 		strerror_r(errno, errbuf, sizeof(errbuf));
-		ERR(ctx, "putfont: ioctl(KDFONTOP): %s", errbuf);
+		ERR(ctx, "ioctl(KDFONTOP): %s", errbuf);
 		return -1;
 	}
 

@@ -34,15 +34,14 @@ _kfont_loadfont(struct kfont_ctx *ctx, char *inbuf, size_t width, size_t height,
 
 	buflen = (size_t)(kcharsize * ((fontsize < 128) ? 128 : fontsize));
 
-	if ((buf = malloc(buflen)) == NULL) {
+	if ((buf = calloc(1, buflen)) == NULL) {
 		ERR(ctx, "out of memory");
 		return -1;
 	}
 
-	memset(buf, 0, buflen);
-
-	for (i = 0; i < fontsize; i++)
+	for (i = 0; i < fontsize; i++) {
 		memcpy(buf + (i * kcharsize), inbuf + (i * charsize), (size_t) charsize);
+	}
 
 	/*
 	 * Due to a kernel bug, font position 32 is used
@@ -74,6 +73,44 @@ _kfont_loadfont(struct kfont_ctx *ctx, char *inbuf, size_t width, size_t height,
 	return 0;
 }
 
+int __attribute__((format(printf, 4, 5)))
+appendf(struct kfont_ctx *ctx, char **buf, size_t *len, const char *fmt, ...)
+{
+	char *p = NULL;
+	size_t msglen = 0;
+	ssize_t siz = 0;
+	va_list ap;
+
+	va_start(ap, fmt);
+	siz = vsnprintf(NULL, 0, fmt, ap);
+	va_end(ap);
+
+	if (siz < 0) {
+		ERR(ctx, "vsnprintf failed");
+		return -1;
+	}
+
+	siz++;
+
+	if (*buf)
+		msglen = strlen(*buf);
+
+	if ((msglen + (size_t) siz) > *len) {
+		if ((p = realloc(*buf, msglen + (size_t) siz)) == NULL) {
+			ERR(ctx, "out of memory");
+			return -EX_OSERR;
+		}
+		*buf = p;
+		*len = msglen + (size_t) siz;
+	}
+
+	va_start(ap, fmt);
+	siz = vsnprintf(*buf + msglen, (size_t) siz, fmt, ap);
+	va_end(ap);
+
+	return 0;
+}
+
 static int
 do_loadtable(struct kfont_ctx *ctx, struct unicode_list *uclistheads, size_t fontsize)
 {
@@ -82,6 +119,10 @@ do_loadtable(struct kfont_ctx *ctx, struct unicode_list *uclistheads, size_t fon
 	unsigned int i, ct = 0, maxct;
 	struct unicode_list *ul;
 	struct unicode_seq *us;
+
+	int rc = 0;
+	char *buf = NULL;
+	size_t buflen = 0;
 
 	maxct = 0;
 	for (i = 0; i < fontsize; i++) {
@@ -101,32 +142,59 @@ do_loadtable(struct kfont_ctx *ctx, struct unicode_list *uclistheads, size_t fon
 
 	for (i = 0; i < fontsize; i++) {
 		ul = uclistheads[i].next;
-		if (ctx->verbose > 1)
-			printf("char %03x:", i);
+
+		if (ctx->verbose > 1) {
+			if ((rc = appendf(ctx, &buf, &buflen, "char %03x:", i)) < 0)
+				goto end;
+		}
+
 		while (ul) {
 			us = ul->seq;
+
 			if (us && !us->next) {
 				up[ct].unicode = us->uc;
 				up[ct].fontpos = i;
 				ct++;
-				if (ctx->verbose > 1)
-					printf(" %04x", us->uc);
+
+				if (ctx->verbose > 1) {
+					if ((rc = appendf(ctx, &buf, &buflen, " %04x", us->uc)) < 0)
+						goto end;
+				}
 			} else if (ctx->verbose > 1) {
-				printf(" seq: <");
+				if ((rc = appendf(ctx, &buf, &buflen, " seq: <")) < 0)
+					goto end;
+
 				while (us) {
-					printf(" %04x", us->uc);
+					if ((rc = appendf(ctx, &buf, &buflen, " %04x", us->uc)) < 0)
+						goto end;
 					us = us->next;
 				}
-				printf(" >");
+
+				if ((rc = appendf(ctx, &buf, &buflen, " >")) < 0)
+					goto end;
 			}
+
+			if (ctx->verbose > 1) {
+				if ((rc = appendf(ctx, &buf, &buflen, ",")) < 0)
+					goto end;
+			}
+
 			ul = ul->next;
-			if (ctx->verbose > 1)
-				printf(",");
 		}
-		if (ctx->verbose > 1)
-			printf("\n");
+
+		if (buf && buf[0] != '\0') {
+			INFO(ctx, "%s", buf);
+			memset(buf, 0, buflen);
+		}
 	}
+
+	if (buf) {
+		free(buf);
+		buf = NULL;
+	}
+
 	if (ct != maxct) {
+		free(up);
 		ERR(ctx, _("bug in do_loadtable"));
 		return -EX_SOFTWARE;
 	}
@@ -137,10 +205,17 @@ do_loadtable(struct kfont_ctx *ctx, struct unicode_list *uclistheads, size_t fon
 	ud.entry_ct = ct;
 	ud.entries  = up;
 
-	if (kfont_load_unimap(ctx, NULL, &ud))
+	if (kfont_load_unimap(ctx, NULL, &ud)) {
+		free(up);
 		return -EX_OSERR;
+	}
+end:
+	if (up)
+		free(up);
+	if (buf)
+		free(buf);
 
-	return 0;
+	return rc;
 }
 
 static ssize_t
@@ -192,7 +267,7 @@ loadnewfont(struct kfont_ctx *ctx, char *ifil, size_t iunit, size_t hwunit)
 	int rc, def = 0;
 	char *inbuf, *fontbuf;
 	size_t inputlth, fontbuflth, fontsize, offset;
-	struct unicode_list *uclistheads, **uclist;
+	struct unicode_list *uclistheads;
 
 	if ((kbdfile_ctx = kbdfile_context_new()) == NULL) {
 		ERR(ctx, "out of memory");
@@ -241,14 +316,10 @@ loadnewfont(struct kfont_ctx *ctx, char *ifil, size_t iunit, size_t hwunit)
 	inbuf = fontbuf = NULL;
 	inputlth = fontbuflth = fontsize = 0;
 	width = 8;
-
-	uclist = NULL;
 	uclistheads = NULL;
 
-	if (ctx->flags & KFONT_FLAG_SKIP_LOAD_UNICODE_MAP)
-		uclist = &uclistheads;
-
-	rc = kfont_read_psffont(ctx, kbdfile_get_file(fp), &inbuf, &inputlth, &fontbuf, &fontbuflth, &width, &fontsize, 0, uclist);
+	rc = kfont_read_psffont(ctx, kbdfile_get_file(fp), &inbuf, &inputlth, &fontbuf, &fontbuflth, &width, &fontsize, 0,
+		(ctx->flags & KFONT_FLAG_SKIP_LOAD_UNICODE_MAP) ? NULL : &uclistheads);
 
 	if (!rc) {
 		kbdfile_free(fp);
