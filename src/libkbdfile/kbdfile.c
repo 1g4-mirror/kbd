@@ -40,13 +40,14 @@ kbdfile_new(struct kbdfile_ctx *ctx)
 	return fp;
 }
 
-void
+void *
 kbdfile_free(struct kbdfile *fp)
 {
 	if (!fp)
-		return;
+		return NULL;
 	kbdfile_close(fp);
 	free(fp);
+	return NULL;
 }
 
 char *

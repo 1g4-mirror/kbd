@@ -32,7 +32,7 @@ int kbdfile_set_log_priority(struct kbdfile_ctx *ctx, int priority);
 struct kbdfile;
 
 struct kbdfile *kbdfile_new(struct kbdfile_ctx *ctx);
-void kbdfile_free(struct kbdfile *fp);
+void *kbdfile_free(struct kbdfile *fp);
 
 struct kbdfile *kbdfile_open(struct kbdfile_ctx *ctx, const char *filename);
 void kbdfile_close(struct kbdfile *fp);

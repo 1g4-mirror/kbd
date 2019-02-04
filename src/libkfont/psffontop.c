@@ -198,6 +198,66 @@ get_uni_entry(struct kfont_ctx *ctx, char **inptr, char **endptr, struct unicode
 	return 0;
 }
 
+static int
+read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length)
+{
+	size_t n = 0;
+	size_t len = 0;
+	char *p, *buf = NULL;
+
+	if (!fd)
+		return 0;
+
+	len = MAXFONTSIZE / 4; /* random */
+	buf = malloc(len);
+
+	if (!buf) {
+		ERR(ctx, "out of memory");
+		return -1;
+	}
+
+	/*
+	 * We used to look at the length of the input file
+	 * with stat(); now that we accept compressed files,
+	 * just read the entire file.
+	 */
+	do {
+		if (n >= len) {
+			len *= 2;
+
+			if ((p = realloc(buf, len)) == NULL) {
+				free(buf);
+				ERR(ctx, "out of memory");
+				return -1;
+			}
+			buf = p;
+		}
+
+		n += fread(buf + n, 1, len - n, fd);
+
+		if (ferror(fd)) {
+			free(buf);
+			ERR(ctx, _("Error reading input font"));
+			return -EX_DATAERR;
+		}
+
+	} while(!feof(fd));
+
+	if (n > 0 && len != n) {
+		if ((p = realloc(buf, n)) == NULL) {
+			free(buf);
+			ERR(ctx, "out of memory");
+			return -1;
+		}
+		buf = p;
+	}
+
+	*result = buf;
+	*length = n;
+
+	return 0;
+}
+
 /*
  * Read a psf font and return >= 0 on success and -1 on failure.
  * Failure means that the font was not psf (but has been read).
@@ -226,47 +286,14 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 {
 	int rc, utf8;
 	char *inputbuf = NULL;
-	size_t inputbuflth = 0;
 	size_t inputlth, fontlen, fontwidth, charsize, hastable, ftoffset;
-	size_t i, k, n;
+	size_t i, k, n = 0;
+	void *p;
 
-	/*
-	 * We used to look at the length of the input file
-	 * with stat(); now that we accept compressed files,
-	 * just read the entire file.
-	 */
 	if (fontf) {
-		inputbuflth = MAXFONTSIZE / 4; /* random */
-		inputbuf = malloc(inputbuflth);
-		n = 0;
-
-		if (!inputbuf) {
-			ERR(ctx, "out of memory");
-			return -1;
-		}
-
-		while (1) {
-			if (n >= inputbuflth) {
-				inputbuflth *= 2;
-
-				inputbuf = realloc(inputbuf, inputbuflth);
-
-				if (!inputbuf) {
-					ERR(ctx, "out of memory");
-					return -1;
-				}
-			}
-
-			n += fread(inputbuf + n, 1, inputbuflth - n, fontf);
-
-			if (ferror(fontf)) {
-				ERR(ctx, _("Error reading input font"));
-				return -EX_DATAERR;
-			}
-
-			if (feof(fontf))
-				break;
-		}
+		rc = read_file(ctx, fontf, &inputbuf, &n);
+		if (rc < 0)
+			goto end;
 
 		if (allbufp)
 			*allbufp = inputbuf;
@@ -278,10 +305,11 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 	} else {
 		if (!allbufp || !allszp) {
 			ERR(ctx, _("Bad call of readpsffont"));
-			return -EX_SOFTWARE;
+			rc = -EX_SOFTWARE;
+			goto end;
 		}
 		inputbuf = *allbufp;
-		inputlth = n = *allszp;
+		inputlth = *allszp;
 	}
 
 	if (inputlth >= sizeof(struct psf1_header) && PSF1_MAGIC_OK((unsigned char *) inputbuf)) {
@@ -291,7 +319,8 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 
 		if (psfhdr->mode > PSF1_MAXMODE) {
 			ERR(ctx, _("Unsupported psf file mode (%d)"), psfhdr->mode);
-			return -EX_DATAERR;
+			rc = -EX_DATAERR;
+			goto end;
 		}
 
 		fontlen = ((psfhdr->mode & PSF1_MODE512) ? 512 : 256);
@@ -308,8 +337,10 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 
 		if (psfhdr.version > PSF2_MAXVERSION) {
 			ERR(ctx, _("Unsupported psf version (%d)"), psfhdr.version);
-			return -EX_DATAERR;
+			rc = -EX_DATAERR;
+			goto end;
 		}
+
 		fontlen = assemble_int((unsigned char *) &psfhdr.length);
 		charsize = assemble_int((unsigned char *) &psfhdr.charsize);
 		flags = assemble_int((unsigned char *) &psfhdr.flags);
@@ -317,42 +348,57 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		ftoffset = assemble_int((unsigned char *) &psfhdr.headersize);
 		fontwidth = assemble_int((unsigned char *) &psfhdr.width);
 		utf8 = 1;
-	} else
-		return -1; /* not psf */
+	} else {
+		rc = -1; /* not psf */
+		goto end;
+	}
 
 	/* tests required - we divide by these */
 	if (fontlen == 0) {
 		ERR(ctx, _("zero input font length?"));
-		return -EX_DATAERR;
+		rc = -EX_DATAERR;
+		goto end;
 	}
+
 	if (charsize == 0) {
 		ERR(ctx, _("zero input character size?"));
-		return -EX_DATAERR;
+		rc = -EX_DATAERR;
+		goto end;
 	}
+
 	i = ftoffset + fontlen * charsize;
+
 	if (i > inputlth || (!hastable && i != inputlth)) {
 		ERR(ctx, _("Input file: bad input length (%d)"), inputlth);
-		return -EX_DATAERR;
+		rc = -EX_DATAERR;
+		goto end;
 	}
 
 	if (fontbufp && allbufp)
 		*fontbufp = *allbufp + ftoffset;
+
 	if (fontszp)
 		*fontszp = fontlen * charsize;
+
 	if (fontlenp)
 		*fontlenp = fontlen;
+
 	if (fontwidthp)
 		*fontwidthp = fontwidth;
 
-	if (!uclistheadsp)
-		return 0; /* got font, don't need unicode_list */
-
-	*uclistheadsp = realloc(*uclistheadsp, (fontpos0 + fontlen) * sizeof(struct unicode_list));
-
-	if (*uclistheadsp == NULL) {
-		ERR(ctx, "out of memory");
-		return -1;
+	if (!uclistheadsp) {
+		/* got font, don't need unicode_list */
+		goto end;
 	}
+
+	p = realloc(*uclistheadsp, (fontpos0 + fontlen) * sizeof(struct unicode_list));
+
+	if (p == NULL) {
+		ERR(ctx, "out of memory");
+		rc = -1;
+		goto end;
+	}
+	*uclistheadsp = p;
 
 	if (hastable) {
 		char *inptr, *endptr;
@@ -365,11 +411,13 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 
 			rc = get_uni_entry(ctx, &inptr, &endptr, &(*uclistheadsp)[k], utf8);
 			if (rc < 0)
-				return rc;
+				goto end;
 		}
+
 		if (inptr != endptr) {
 			ERR(ctx, _("Input file: trailing garbage"));
-			return -EX_DATAERR;
+			rc = -EX_DATAERR;
+			goto end;
 		}
 	} else {
 		for (i = 0; i < fontlen; i++) {
@@ -377,8 +425,16 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 			clear_uni_entry(&(*uclistheadsp)[k]);
 		}
 	}
+end:
+	if (n && rc != 0) {
+		for (i = 0; i < fontlen; i++) {
+			k = fontpos0 + i;
+			free(&(*uclistheadsp)[k]);
+		}
+		free(inputbuf);
+	}
 
-	return 0; /* got psf font */
+	return rc; /* got psf font */
 }
 
 static int
