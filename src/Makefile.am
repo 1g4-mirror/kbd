@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	-g -O0 \
 	$(CODE_COVERAGE_CPPFLAGS) \
 	-I$(srcdir)/libcommon -I$(builddir)/libcommon \
 	-I$(srcdir)/libkeymap -I$(builddir)/libkeymap \
@@ -41,7 +42,11 @@ EXTRA_DIST = \
 	totextmode.c README.cad README.init README.openvt \
 	cad
 
-ALL_S   = paths.h
+ALL_S = paths.h
+LDADD = \
+	libcommon/libcommon.a \
+	@INTLLIBS@ \
+	$(CODE_COVERAGE_LIBS)
 
 chvt_SOURCES            = $(ALL_S) chvt.c
 clrunimap_SOURCES       = $(ALL_S) clrunimap.c
@@ -50,35 +55,41 @@ fgconsole_SOURCES       = $(ALL_S) fgconsole.c
 getkeycodes_SOURCES     = $(ALL_S) getkeycodes.c
 getunimap_SOURCES       = $(ALL_S) getunimap.c
 kbd_mode_SOURCES        = $(ALL_S) kbd_mode.c
-loadunimap_SOURCES      = $(ALL_S) loadunimap.c
-mapscrn_SOURCES         = $(ALL_S) mapscrn.c
 openvt_SOURCES          = $(ALL_S) openvt.c
-psfxtable_SOURCES       = $(ALL_S) psfxtable.c
-resizecons_SOURCES      = $(ALL_S) resizecons.c
 screendump_SOURCES      = $(ALL_S) screendump.c
-setfont_SOURCES         = $(ALL_S) setfont.c
 setkeycodes_SOURCES     = $(ALL_S) setkeycodes.c
 setvtrgb_SOURCES        = $(ALL_S) setvtrgb.c
 setlogcons_SOURCES      = $(ALL_S) setlogcons.c
 setpalette_SOURCES      = $(ALL_S) setpalette.c
 setvesablank_SOURCES    = $(ALL_S) setvesablank.c
-showconsolefont_SOURCES = $(ALL_S) showconsolefont.c
 showkey_SOURCES         = $(ALL_S) showkey.c
 kbdinfo_SOURCES         = $(ALL_S) kbdinfo.c
 
-dumpkeys_SOURCES        = $(ALL_S) dumpkeys.c
-loadkeys_SOURCES        = $(ALL_S) loadkeys.c
+resizecons_SOURCES = $(ALL_S) resizecons.c
+resizecons_LDADD   = libkbdfile/libkbdfile.la $(LDADD)
 
-mapscrn_CFLAGS = -DMAIN
-loadunimap_CFLAGS = -DMAIN
+dumpkeys_SOURCES = $(ALL_S) dumpkeys.c
+dumpkeys_LDADD   = libkeymap/libkeymap.la $(LDADD)
 
-LDADD = \
-	libkbdfile/libkbdfile.la \
-	libkfont/libkfont.la \
-	libkeymap/libkeymap.la \
-	libcommon/libcommon.a \
-	@INTLLIBS@ \
-	$(CODE_COVERAGE_LIBS)
+loadkeys_SOURCES = $(ALL_S) loadkeys.c
+loadkeys_LDADD   = libkeymap/libkeymap.la $(LDADD)
+
+showconsolefont_SOURCES = $(ALL_S) showconsolefont.c
+showconsolefont_LDADD   = libkfont/libkfont.la $(LDADD)
+
+psfxtable_SOURCES = $(ALL_S) psfxtable.c
+psfxtable_LDADD   = libkfont/libkfont.la $(LDADD)
+
+loadunimap_SOURCES = $(ALL_S) loadunimap.c
+loadunimap_CFLAGS  = -DMAIN
+loadunimap_LDADD   = libkfont/libkfont.la $(LDADD)
+
+mapscrn_SOURCES = $(ALL_S) mapscrn.c
+mapscrn_CFLAGS  = -DMAIN
+mapscrn_LDADD   = libkfont/libkfont.la $(LDADD)
+
+setfont_SOURCES = $(ALL_S) setfont.c
+setfont_LDADD   = libkfont/libkfont.la $(LDADD)
 
 install-exec-hook:
 	for i in psfaddtable psfgettable psfstriptable; do \

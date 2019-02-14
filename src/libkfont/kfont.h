@@ -125,8 +125,10 @@ struct unicode_list {
 	struct unicode_seq *seq;
 };
 
+int kfont_read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length);
+
 int kfont_read_psffont(struct kfont_ctx *ctx,
-                      FILE *filename, char **allbufp, size_t *allszp,
+                      char *allbufp, size_t allszp,
                       char **fontbufp, size_t *fontszp,
                       size_t *fontwidthp, size_t *fontlenp, size_t fontpos0,
                       struct unicode_list **uclistheadsp);

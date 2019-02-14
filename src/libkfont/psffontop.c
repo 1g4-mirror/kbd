@@ -16,31 +16,61 @@
 #include "contextP.h"
 #include "paths.h"
 
+static void
+unicode_seq_free(struct unicode_seq *us)
+{
+	struct unicode_seq *us_next;
+	while (us) {
+		us_next = us->next;
+		free(us);
+		us = us_next;
+	}
+}
+
+void
+unicode_list_free(struct unicode_list **uclistheads, size_t fontlen)
+{
+	if (uclistheads == NULL || *uclistheads == NULL)
+		return;
+
+	for (size_t i = 0; i < fontlen; i++) {
+		struct unicode_list *ul = (*uclistheads) + i;
+		while (ul != NULL) {
+			struct unicode_list *ul_next = ul->next;
+			unicode_seq_free(ul->seq);
+			free(ul);
+			ul = ul_next;
+		}
+	}
+
+	free(*uclistheads);
+	*uclistheads = NULL;
+}
+
 static int
 addpair(struct kfont_ctx *ctx, struct unicode_list *up, unsigned int uc)
 {
-	struct unicode_list *ul = NULL;
-	struct unicode_seq *us = NULL;
+	struct unicode_list *ul = calloc(1, sizeof(struct unicode_list));
+	struct unicode_seq  *us = calloc(1, sizeof(struct unicode_seq));
 
-	if ((ul = malloc(sizeof(struct unicode_list))) == NULL ||
-	    (us = malloc(sizeof(struct unicode_seq ))) == NULL)
+	if (ul == NULL || us == NULL)
 		goto nomem;
 
 	us->uc = uc;
 	us->prev = us;
 	us->next = NULL;
+
 	ul->seq = us;
 	ul->prev = up->prev;
 	ul->prev->next = ul;
 	ul->next = NULL;
-	up->prev = ul;
+
+	up->next = ul;
 
 	return 0;
 nomem:
-	if (ul)
-		free(ul);
-	if (us)
-		free(us);
+	free(ul);
+	free(us);
 
 	ERR(ctx, "out of memory");
 	return -1;
@@ -131,14 +161,6 @@ assemble_utf8(struct kfont_ctx *ctx, char **inptr, long cnt, unsigned int *res)
 	return 0;
 }
 
-static void
-clear_uni_entry(struct unicode_list *up)
-{
-	up->next = NULL;
-	up->seq = NULL;
-	up->prev = up;
-}
-
 /*
  * Read description of a single font position.
  */
@@ -184,6 +206,7 @@ get_uni_entry(struct kfont_ctx *ctx, char **inptr, char **endptr, struct unicode
 			}
 		}
 		if (inseq < 2) {
+			INFO(ctx, "addpair(ctx, up=%p, ...)", up);
 			if (addpair(ctx, up, unichar) < 0)
 				return -1;
 		} else {
@@ -198,8 +221,8 @@ get_uni_entry(struct kfont_ctx *ctx, char **inptr, char **endptr, struct unicode
 	return 0;
 }
 
-static int
-read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length)
+int
+kfont_read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length)
 {
 	size_t n = 0;
 	size_t len = 0;
@@ -279,38 +302,28 @@ read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length)
  */
 int
 kfont_read_psffont(struct kfont_ctx *ctx,
-                   FILE *fontf, char **allbufp, size_t *allszp,
+                   char *allbufp, size_t allszp,
                    char **fontbufp, size_t *fontszp,
                    size_t *fontwidthp, size_t *fontlenp, size_t fontpos0,
                    struct unicode_list **uclistheadsp)
 {
-	int rc, utf8;
+	int utf8;
 	char *inputbuf = NULL;
 	size_t inputlth, fontlen, fontwidth, charsize, hastable, ftoffset;
-	size_t i, k, n = 0;
+	size_t i;
 	void *p;
+	int rc = 0;
 
-	if (fontf) {
-		rc = read_file(ctx, fontf, &inputbuf, &n);
-		if (rc < 0)
-			goto end;
+	fontlen = 0;
 
-		if (allbufp)
-			*allbufp = inputbuf;
-
-		if (allszp)
-			*allszp = n;
-
-		inputlth = n;
-	} else {
-		if (!allbufp || !allszp) {
-			ERR(ctx, _("Bad call of readpsffont"));
-			rc = -EX_SOFTWARE;
-			goto end;
-		}
-		inputbuf = *allbufp;
-		inputlth = *allszp;
+	if (!allbufp || !allszp) {
+		ERR(ctx, _("Bad call of readpsffont"));
+		rc = -EX_SOFTWARE;
+		goto end;
 	}
+
+	inputbuf = allbufp;
+	inputlth = allszp;
 
 	if (inputlth >= sizeof(struct psf1_header) && PSF1_MAGIC_OK((unsigned char *) inputbuf)) {
 		struct psf1_header *psfhdr;
@@ -349,7 +362,7 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		fontwidth = assemble_int((unsigned char *) &psfhdr.width);
 		utf8 = 1;
 	} else {
-		rc = -1; /* not psf */
+		rc = 1; /* not psf */
 		goto end;
 	}
 
@@ -374,8 +387,8 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		goto end;
 	}
 
-	if (fontbufp && allbufp)
-		*fontbufp = *allbufp + ftoffset;
+	if (fontbufp)
+		*fontbufp = allbufp + ftoffset;
 
 	if (fontszp)
 		*fontszp = fontlen * charsize;
@@ -407,9 +420,7 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 		endptr = inputbuf + inputlth;
 
 		for (i = 0; i < fontlen; i++) {
-			k = fontpos0 + i;
-
-			rc = get_uni_entry(ctx, &inptr, &endptr, &(*uclistheadsp)[k], utf8);
+			rc = get_uni_entry(ctx, &inptr, &endptr, &(*uclistheadsp)[fontpos0 + i], utf8);
 			if (rc < 0)
 				goto end;
 		}
@@ -420,20 +431,12 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 			goto end;
 		}
 	} else {
-		for (i = 0; i < fontlen; i++) {
-			k = fontpos0 + i;
-			clear_uni_entry(&(*uclistheadsp)[k]);
-		}
-	}
-end:
-	if (n && rc != 0) {
-		for (i = 0; i < fontlen; i++) {
-			k = fontpos0 + i;
-			free(&(*uclistheadsp)[k]);
-		}
-		free(inputbuf);
+		unicode_list_free(uclistheadsp, fontlen);
 	}
 
+	return 0;
+end:
+	unicode_list_free(uclistheadsp, fontlen);
 	return rc; /* got psf font */
 }
 

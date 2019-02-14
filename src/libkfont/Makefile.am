@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	-g -O0 \
 	$(CODE_COVERAGE_CPPFLAGS) \
 	-I$(srcdir) -I$(builddir) -I$(srcdir)/.. -I$(builddir)/.. \
 	-I$(srcdir)/../libcommon -I$(builddir)/../libcommon \

@@ -68,6 +68,7 @@ unsigned long from_utf8(char **inptr, int cnt, int *err);
 /* psffontop.c */
 int appendunicode(struct kfont_ctx *ctx, FILE *fp, unsigned int uc, int utf8);
 int appendseparator(struct kfont_ctx *ctx, FILE *fp, int seq, int utf8);
+void unicode_list_free(struct unicode_list **uclistheads, size_t fontlen);
 
 /* setfont.c */
 int appendf(struct kfont_ctx *ctx, char **buf, size_t *len, const char *fmt, ...);
