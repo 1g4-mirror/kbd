@@ -20,28 +20,45 @@ static void
 unicode_seq_free(struct unicode_seq *us)
 {
 	struct unicode_seq *us_next;
-	while (us) {
+	while (us != NULL) {
 		us_next = us->next;
 		free(us);
 		us = us_next;
 	}
 }
 
+static void
+unicode_list_free(struct unicode_list *up)
+{
+	struct unicode_list *ul, *ul_next;
+
+	if (up == NULL)
+		return;
+
+	ul = up->next;
+
+	while (ul != NULL) {
+		ul_next = ul->next;
+		unicode_seq_free(ul->seq);
+		free(ul);
+		ul = ul_next;
+	}
+
+	unicode_seq_free(up->seq);
+
+	up->seq = NULL;
+	up->next = NULL;
+	up->prev = up;
+}
+
 void
-unicode_list_free(struct unicode_list **uclistheads, size_t fontlen)
+unicode_list_heads_free(struct unicode_list **uclistheads, size_t fontlen)
 {
 	if (uclistheads == NULL || *uclistheads == NULL)
 		return;
 
-	for (size_t i = 0; i < fontlen; i++) {
-		struct unicode_list *ul = (*uclistheads) + i;
-		while (ul != NULL) {
-			struct unicode_list *ul_next = ul->next;
-			unicode_seq_free(ul->seq);
-			free(ul);
-			ul = ul_next;
-		}
-	}
+	for (size_t i = 0; i < fontlen; i++)
+		unicode_list_free((*uclistheads) + i);
 
 	free(*uclistheads);
 	*uclistheads = NULL;
@@ -65,7 +82,7 @@ addpair(struct kfont_ctx *ctx, struct unicode_list *up, unsigned int uc)
 	ul->prev->next = ul;
 	ul->next = NULL;
 
-	up->next = ul;
+	up->prev = ul;
 
 	return 0;
 nomem:
@@ -79,8 +96,7 @@ nomem:
 static int
 addseq(struct kfont_ctx *ctx, struct unicode_list *up, unsigned int uc)
 {
-	struct unicode_seq *us;
-	struct unicode_seq *usl;
+	struct unicode_seq *us, *usl;
 	struct unicode_list *ul = up->prev;
 
 	if ((us = malloc(sizeof(struct unicode_seq))) == NULL) {
@@ -89,14 +105,18 @@ addseq(struct kfont_ctx *ctx, struct unicode_list *up, unsigned int uc)
 	}
 
 	usl = ul->seq;
-	while (usl->next)
+	while (usl && usl->next)
 		usl = usl->next;
 
 	us->uc = uc;
-	us->prev = usl;
 	us->next = NULL;
-	usl->next = us;
-	//ul->seq->prev = us;
+
+	if (usl) {
+		us->prev = usl;
+		usl->next = us;
+	} else {
+		us->prev = us;
+	}
 
 	return 0;
 }
@@ -206,7 +226,6 @@ get_uni_entry(struct kfont_ctx *ctx, char **inptr, char **endptr, struct unicode
 			}
 		}
 		if (inseq < 2) {
-			INFO(ctx, "addpair(ctx, up=%p, ...)", up);
 			if (addpair(ctx, up, unichar) < 0)
 				return -1;
 		} else {
@@ -413,6 +432,8 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 	}
 	*uclistheadsp = p;
 
+	memset(p + (fontpos0 * sizeof(struct unicode_list)), 0, (fontlen * sizeof(struct unicode_list)));
+
 	if (hastable) {
 		char *inptr, *endptr;
 
@@ -431,12 +452,13 @@ kfont_read_psffont(struct kfont_ctx *ctx,
 			goto end;
 		}
 	} else {
-		unicode_list_free(uclistheadsp, fontlen);
+		for (i = 0; i < fontlen; i++) {
+			unicode_list_free(&(*uclistheadsp)[fontpos0 + i]);
+		}
 	}
 
 	return 0;
 end:
-	unicode_list_free(uclistheadsp, fontlen);
 	return rc; /* got psf font */
 }
 

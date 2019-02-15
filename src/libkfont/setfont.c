@@ -453,7 +453,7 @@ loadnewfont(struct kfont_ctx *ctx, char *ifil, size_t iunit, size_t hwunit)
 end:
 	kbdfile_free(fp);
 	kbdfile_context_free(kbdfile_ctx);
-	unicode_list_free(&uclistheads, fontsize);
+	unicode_list_heads_free(&uclistheads, fontsize);
 	free(inbuf);
 
 	return rc;
@@ -564,7 +564,7 @@ kfont_load_fonts(struct kfont_ctx *ctx, char **ifiles, int ifilct, size_t iunit,
 end:
 	kbdfile_free(fp);
 	kbdfile_context_free(kbdfile_ctx);
-	unicode_list_free(&uclistheads, bigfontsize);
+	unicode_list_heads_free(&uclistheads, bigfontsize);
 
 	free(inbuf);
 	free(bigfontbuf);
