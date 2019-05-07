@@ -242,6 +242,8 @@ int main(int argc, char **argv)
 	char *inbuf, *fontbuf;
 	size_t inbuflth, fontbuflth;
 
+	struct psffont *font = NULL;
+
 	set_progname(argv[0]);
 
 	setlocale(LC_ALL, "");
@@ -366,18 +368,23 @@ int main(int argc, char **argv)
 	if ((rc = kfont_read_file(ctx, ifil, &inbuf, &inbuflth)) < 0)
 		exit(-rc);
 
-	if (kfont_read_psffont(ctx, inbuf, inbuflth, &fontbuf, &fontbuflth, &width, &fontlen, 0, itab ? NULL : &uclistheads) < 0) {
+	if (kfont_psffont_read(ctx, inbuf, inbuflth, (itab ? KFONT_FLAG_SKIP_LOAD_UNICODE_MAP : 0), &font) < 0) {
 		char *u = _("%s: Bad magic number on %s\n");
 		fprintf(stderr, u, get_progname(), ifname);
 		exit(EX_DATAERR);
 	}
 	fclose(ifil);
 
+	uclistheads = kfont_psffont_unicode_list(ctx, font);
+	fontlen     = kfont_psffont_length(ctx, font);
+	hastable    = (uclistheads != NULL);
+
+/*
 	charsize  = fontbuflth / fontlen;
 	bytewidth = (width + 7) / 8;
 	if (!bytewidth)
 		bytewidth = 1;
-	height            = charsize / bytewidth;
+	height = charsize / bytewidth;
 
 	hastable = (uclistheads != NULL);
 
@@ -390,7 +397,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, u, get_progname());
 		exit(EX_DATAERR);
 	}
-
+*/
 	if (itab) {
 		read_itable(itab, fontlen, &uclistheads);
 		fclose(itab);

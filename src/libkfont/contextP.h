@@ -50,6 +50,18 @@ struct kfont_ctx {
 	char **unisuffixes;
 };
 
+struct psffont {
+	int type;
+	int utf8;
+	char *data;
+	size_t size;
+	size_t height;
+	size_t width;
+	size_t length;
+	size_t charsize;
+	struct unicode_list *uclistheads;
+};
+
 #define STACKBUF_LEN 256
 
 #define INFO(ctx, arg...) kfont_log(ctx, LOG_INFO,    __FILE__, __LINE__, __func__, ##arg)

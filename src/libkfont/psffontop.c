@@ -64,6 +64,18 @@ unicode_list_heads_free(struct unicode_list **uclistheads, size_t fontlen)
 	*uclistheads = NULL;
 }
 
+void
+kfont_psffont_free(struct psffont *font)
+{
+	if (font == NULL)
+		return;
+	if (font->uclistheads)
+		unicode_list_heads_free(&font->uclistheads, font->length);
+	free(font->data);
+
+	memset(font, 0, sizeof(struct psffont));
+}
+
 static int
 addpair(struct kfont_ctx *ctx, struct unicode_list *up, unsigned int uc)
 {
@@ -300,165 +312,202 @@ kfont_read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length)
 	return 0;
 }
 
-/*
- * Read a psf font and return >= 0 on success and -1 on failure.
- * Failure means that the font was not psf (but has been read).
- * > 0 means that the Unicode table contains sequences.
- *
- * The font is read either from file (when FONT is non-NULL)
- * or from memory (namely from *ALLBUFP of size *ALLSZP).
- * In the former case, if ALLBUFP is non-NULL, a pointer to
- * the entire fontfile contents (possibly read from pipe)
- * is returned in *ALLBUFP, and the size in ALLSZP, where this
- * buffer was allocated using malloc().
- * In FONTBUFP, FONTSZP the subinterval of ALLBUFP containing
- * the font data is given.
- * The font width is stored in FONTWIDTHP.
- * The number of glyphs is stored in FONTLENP.
- * The unicodetable is stored in UCLISTHEADSP (when non-NULL), with
- * fontpositions counted from FONTPOS0 (so that calling this several
- * times can achieve font merging).
- */
-int
-kfont_read_psffont(struct kfont_ctx *ctx,
-                   char *allbufp, size_t allszp,
-                   char **fontbufp, size_t *fontszp,
-                   size_t *fontwidthp, size_t *fontlenp, size_t fontpos0,
-                   struct unicode_list **uclistheadsp)
+struct unicode_list *
+kfont_psffont_unicode_list(struct kfont_ctx *ctx __attribute__ ((__unused__)), struct psffont *font)
 {
-	int utf8;
-	char *inputbuf = NULL;
-	size_t inputlth, fontlen, fontwidth, charsize, hastable, ftoffset;
-	size_t i;
+	if (font == NULL)
+		return NULL;
+	return font->uclistheads;
+}
+
+int
+kfont_psffont_set_unicode_list(struct kfont_ctx *ctx __attribute__ ((__unused__)), struct psffont *font, struct unicode_list *uclistheads)
+{
+	if (font == NULL)
+		return -1;
+	font->uclistheads = uclistheads;
+	return 0;
+}
+
+size_t
+kfont_psffont_length(struct kfont_ctx *ctx __attribute__ ((__unused__)), struct psffont *font)
+{
+	if (font == NULL)
+		return 0;
+	return font->length;
+}
+
+int
+kfont_psffont_read(struct kfont_ctx *ctx, char *data, size_t datasize, int flags, struct psffont **result)
+{
+	size_t i, hastable, ftoffset;
+	size_t length, height, width, charsize, size;
 	void *p;
-	int rc = 0;
+	int utf8, psftype, rc = 0;
+	struct psffont *font = NULL;
 
-	fontlen = 0;
-
-	if (!allbufp || !allszp) {
+	if (!data || !datasize) {
 		ERR(ctx, _("Bad call of readpsffont"));
 		rc = -EX_SOFTWARE;
-		goto end;
+		goto error;
 	}
 
-	inputbuf = allbufp;
-	inputlth = allszp;
+	if (!*result) {
+		font = calloc(1, sizeof(struct psffont));
+		if (font == NULL) {
+			ERR(ctx, "out of memory");
+			rc = -1;
+			goto error;
+		}
+	} else {
+		font = *result;
+	}
 
-	if (inputlth >= sizeof(struct psf1_header) && PSF1_MAGIC_OK((unsigned char *) inputbuf)) {
+	if (datasize >= sizeof(struct psf1_header) && PSF1_MAGIC_OK((unsigned char *) data)) {
 		struct psf1_header *psfhdr;
 
-		psfhdr = (struct psf1_header *) &inputbuf[0];
+		psfhdr = (struct psf1_header *) &data[0];
 
 		if (psfhdr->mode > PSF1_MAXMODE) {
 			ERR(ctx, _("Unsupported psf file mode (%d)"), psfhdr->mode);
 			rc = -EX_DATAERR;
-			goto end;
+			goto error;
 		}
 
-		fontlen = ((psfhdr->mode & PSF1_MODE512) ? 512 : 256);
+		length   = ((psfhdr->mode & PSF1_MODE512) ? 512 : 256);
 		charsize = psfhdr->charsize;
 		hastable = (psfhdr->mode & (PSF1_MODEHASTAB | PSF1_MODEHASSEQ));
 		ftoffset = sizeof(struct psf1_header);
-		fontwidth = 8;
-		utf8 = 0;
-	} else if (inputlth >= sizeof(struct psf2_header) && PSF2_MAGIC_OK((unsigned char *) inputbuf)) {
+		width    = 8;
+		utf8     = 0;
+		psftype  = 1;
+	} else if (datasize >= sizeof(struct psf2_header) && PSF2_MAGIC_OK((unsigned char *) data)) {
 		struct psf2_header psfhdr;
-		unsigned int flags;
+		unsigned int psfflags;
 
-		memcpy(&psfhdr, inputbuf, sizeof(struct psf2_header));
+		memcpy(&psfhdr, data, sizeof(struct psf2_header));
 
 		if (psfhdr.version > PSF2_MAXVERSION) {
 			ERR(ctx, _("Unsupported psf version (%d)"), psfhdr.version);
 			rc = -EX_DATAERR;
-			goto end;
+			goto error;
 		}
 
-		fontlen = assemble_int((unsigned char *) &psfhdr.length);
+		length   = assemble_int((unsigned char *) &psfhdr.length);
 		charsize = assemble_int((unsigned char *) &psfhdr.charsize);
-		flags = assemble_int((unsigned char *) &psfhdr.flags);
-		hastable = (flags & PSF2_HAS_UNICODE_TABLE);
+		psfflags = assemble_int((unsigned char *) &psfhdr.flags);
+		hastable = (psfflags & PSF2_HAS_UNICODE_TABLE);
 		ftoffset = assemble_int((unsigned char *) &psfhdr.headersize);
-		fontwidth = assemble_int((unsigned char *) &psfhdr.width);
-		utf8 = 1;
+		width    = assemble_int((unsigned char *) &psfhdr.width);
+		utf8     = 1;
+		psftype  = 2;
 	} else {
 		rc = 1; /* not psf */
-		goto end;
+		goto error;
 	}
 
 	/* tests required - we divide by these */
-	if (fontlen == 0) {
+	if (length == 0) {
 		ERR(ctx, _("zero input font length?"));
 		rc = -EX_DATAERR;
-		goto end;
+		goto error;
 	}
 
 	if (charsize == 0) {
 		ERR(ctx, _("zero input character size?"));
 		rc = -EX_DATAERR;
-		goto end;
+		goto error;
 	}
 
-	i = ftoffset + fontlen * charsize;
+	size = length * charsize;
+	height = size / (((width + 7) / 8) * length);
 
-	if (i > inputlth || (!hastable && i != inputlth)) {
-		ERR(ctx, _("Input file: bad input length (%d)"), inputlth);
+	if ((ftoffset + size) > datasize || (!hastable && (ftoffset + size) != datasize)) {
+		ERR(ctx, _("Input file: bad input length (%d)"), datasize);
 		rc = -EX_DATAERR;
-		goto end;
+		goto error;
 	}
 
-	if (fontbufp)
-		*fontbufp = allbufp + ftoffset;
+	p = realloc(font->data, font->size + size);
 
-	if (fontszp)
-		*fontszp = fontlen * charsize;
+	if (p == NULL) {
+		ERR(ctx, "out of memory");
+		rc = -EX_OSERR;
+		goto error;
+	}
 
-	if (fontlenp)
-		*fontlenp = fontlen;
+	font->data = p;
 
-	if (fontwidthp)
-		*fontwidthp = fontwidth;
+	memcpy(font->data + font->size, data + ftoffset, size);
 
-	if (!uclistheadsp) {
+	if (flags & KFONT_FLAG_SKIP_LOAD_UNICODE_MAP) {
 		/* got font, don't need unicode_list */
-		goto end;
+		goto success;
 	}
 
-	p = realloc(*uclistheadsp, (fontpos0 + fontlen) * sizeof(struct unicode_list));
+	p = realloc(font->uclistheads, (font->length + length) * sizeof(struct unicode_list));
 
 	if (p == NULL) {
 		ERR(ctx, "out of memory");
 		rc = -1;
-		goto end;
+		goto error;
 	}
-	*uclistheadsp = p;
+	font->uclistheads = p;
 
-	memset(p + (fontpos0 * sizeof(struct unicode_list)), 0, (fontlen * sizeof(struct unicode_list)));
+	memset(font->uclistheads + font->length, 0, (length * sizeof(struct unicode_list)));
 
 	if (hastable) {
 		char *inptr, *endptr;
 
-		inptr = inputbuf + ftoffset + fontlen * charsize;
-		endptr = inputbuf + inputlth;
+		inptr  = data + ftoffset + size;
+		endptr = data + datasize;
 
-		for (i = 0; i < fontlen; i++) {
-			rc = get_uni_entry(ctx, &inptr, &endptr, &(*uclistheadsp)[fontpos0 + i], utf8);
+		for (i = 0; i < length; i++) {
+			rc = get_uni_entry(ctx, &inptr, &endptr, &(font->uclistheads)[font->length + i], utf8);
 			if (rc < 0)
-				goto end;
+				goto error;
 		}
 
 		if (inptr != endptr) {
 			ERR(ctx, _("Input file: trailing garbage"));
 			rc = -EX_DATAERR;
-			goto end;
+			goto error;
 		}
 	} else {
-		for (i = 0; i < fontlen; i++) {
-			unicode_list_free(&(*uclistheadsp)[fontpos0 + i]);
+		for (i = 0; i < length; i++) {
+			unicode_list_free(&(font->uclistheads)[font->length + i]);
 		}
 	}
 
+success:
+	if (font->height == 0)
+		font->height = height;
+	else if (font->height != height) {
+		ERR(ctx, _("When loading several fonts, all must have the same height"));
+		rc = -EX_DATAERR;
+		goto error;
+	}
+
+	if (font->width == 0)
+		font->width = width;
+	else if (font->width != width) {
+		ERR(ctx, _("When loading several fonts, all must have the same width"));
+		rc = -EX_DATAERR;
+		goto error;
+	}
+
+	font->size     += size;
+	font->length   += length;
+	font->charsize = charsize;
+	font->utf8     = utf8;
+	font->type     = psftype;
+
+	*result = font;
 	return 0;
-end:
+error:
+	kfont_psffont_free(font);
+	free(font);
+
 	return rc; /* got psf font */
 }
 
@@ -547,20 +596,20 @@ appendseparator(struct kfont_ctx *ctx, FILE *fp, int seq, int utf8)
 }
 
 int
-kfont_write_psffontheader(struct kfont_ctx *ctx,
-                          FILE *ofil, size_t width, size_t height, size_t fontlen,
-                          int *psftype, int flags)
+kfont_write_psffontheader(struct kfont_ctx *ctx, FILE *ofil, struct psffont *font, int flags)
+//                          size_t width, size_t height, size_t fontlen,
+//                          int *psftype, int flags)
 {
-	size_t bytewidth, charsize;
+//	size_t bytewidth, charsize;
 	size_t ret;
 
-	bytewidth = (width + 7) / 8;
-	charsize = bytewidth * height;
+//	bytewidth = (width + 7) / 8;
+//	charsize = bytewidth * height;
 
-	if ((fontlen != 256 && fontlen != 512) || width != 8)
-		*psftype = 2;
+	if ((font->length != 256 && font->length != 512) || font->width != 8)
+		font->type = 2;
 
-	if (*psftype == 2) {
+	if (font->type == 2) {
 		struct psf2_header h;
 		unsigned int flags2 = 0;
 
@@ -575,10 +624,10 @@ kfont_write_psffontheader(struct kfont_ctx *ctx,
 		store_int_le((unsigned char *) &h.version, 0);
 		store_int_le((unsigned char *) &h.headersize, sizeof(h));
 		store_int_le((unsigned char *) &h.flags, flags2);
-		store_int_le((unsigned char *) &h.length, fontlen);
-		store_int_le((unsigned char *) &h.charsize, charsize);
-		store_int_le((unsigned char *) &h.width, width);
-		store_int_le((unsigned char *) &h.height, height);
+		store_int_le((unsigned char *) &h.length, font->length);
+		store_int_le((unsigned char *) &h.charsize, font->charsize);
+		store_int_le((unsigned char *) &h.width, font->width);
+		store_int_le((unsigned char *) &h.height, font->height);
 
 		ret = fwrite(&h, sizeof(h), 1, ofil);
 	} else {
@@ -588,7 +637,7 @@ kfont_write_psffontheader(struct kfont_ctx *ctx,
 		h.magic[1] = PSF1_MAGIC1;
 		h.mode = 0;
 
-		if (fontlen == 512)
+		if (font->length == 512)
 			h.mode |= PSF1_MODE512;
 
 		if (flags & WPSFH_HASSEQ)
@@ -596,7 +645,7 @@ kfont_write_psffontheader(struct kfont_ctx *ctx,
 		else if (flags & WPSFH_HASTAB)
 			h.mode |= PSF1_MODEHASTAB;
 
-		h.charsize = (unsigned char) charsize;
+		h.charsize = (unsigned char) font->charsize;
 
 		ret = fwrite(&h, sizeof(h), 1, ofil);
 	}
@@ -610,41 +659,44 @@ kfont_write_psffontheader(struct kfont_ctx *ctx,
 }
 
 int
-kfont_write_psffont(struct kfont_ctx *ctx,
-                    FILE *ofil, char *fontbuf, size_t width, size_t height, size_t fontlen,
-                    int psftype, struct unicode_list *uclistheads)
+kfont_psffont_write(struct kfont_ctx *ctx, FILE *ofil, struct psffont *font)
+//                    char *fontbuf, size_t width, size_t height, size_t fontlen,
+//                    int psftype, struct unicode_list *uclistheads)
 {
 	size_t bytewidth, charsize;
 	int flags, utf8;
 	size_t i;
 
-	bytewidth = (width + 7) / 8;
-	charsize = bytewidth * height;
+//	bytewidth = (width + 7) / 8;
+//	charsize = bytewidth * height;
 	flags = 0;
 
-	if (uclistheads) {
+	if (font->uclistheads) {
 		flags |= WPSFH_HASTAB;
-		if (has_sequences(uclistheads, fontlen))
+		if (has_sequences(font->uclistheads, font->length))
 			flags |= WPSFH_HASSEQ;
 	}
 
-	if (kfont_write_psffontheader(ctx, ofil, width, height, fontlen, &psftype, flags) < 0)
+	if (font->charsize == 0)
+		font->charsize = ((font->width + 7) / 8) * font->height;
+
+	if (kfont_write_psffontheader(ctx, ofil, font, flags) < 0)
 		return -EX_IOERR;
 
-	utf8 = (psftype == 2);
+	utf8 = (font->type == 2);
 
-	if ((fwrite(fontbuf, charsize, fontlen, ofil)) != fontlen) {
+	if ((fwrite(font->data, font->charsize, font->length, ofil)) != font->length) {
 		ERR(ctx, _("Cannot write font file"));
 		return -EX_IOERR;
 	}
 
 	/* unimaps: -1 => do nothing: caller will append map */
-	if (uclistheads != NULL && uclistheads != (struct unicode_list *) -1) {
+	if (font->uclistheads != NULL && font->uclistheads != (struct unicode_list *) -1) {
 		struct unicode_list *ul;
 		struct unicode_seq *us;
 
-		for (i = 0; i < fontlen; i++) {
-			ul = uclistheads[i].next;
+		for (i = 0; i < font->length; i++) {
+			ul = font->uclistheads[i].next;
 			while (ul) {
 				us = ul->seq;
 

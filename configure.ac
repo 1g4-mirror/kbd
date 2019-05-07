@@ -92,6 +92,7 @@ CC_CHECK_CFLAGS_APPEND([\
 	-Wshadow \
 	-Wstrict-prototypes \
 	-Wwrite-strings \
+	-Wpointer-arith \
 ])
 
 case $host_cpu in

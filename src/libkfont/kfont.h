@@ -127,22 +127,24 @@ struct unicode_list {
 
 int kfont_read_file(struct kfont_ctx *ctx, FILE *fd, char **result, size_t *length);
 
-int kfont_read_psffont(struct kfont_ctx *ctx,
-                      char *allbufp, size_t allszp,
-                      char **fontbufp, size_t *fontszp,
-                      size_t *fontwidthp, size_t *fontlenp, size_t fontpos0,
-                      struct unicode_list **uclistheadsp);
+struct psffont;
 
-int kfont_write_psffont(struct kfont_ctx *ctx,
+struct unicode_list *kfont_psffont_unicode_list(struct kfont_ctx *ctx, struct psffont *font);
+int kfont_psffont_set_unicode_list(struct kfont_ctx *ctx, struct psffont *font, struct unicode_list *uclistheads);
+
+size_t kfont_psffont_length(struct kfont_ctx *ctx, struct psffont *font);
+
+int kfont_psffont_read(struct kfont_ctx *ctx, char *data, size_t datalen, int flags, struct psffont **font);
+void kfont_psffont_free(struct psffont *font);
+
+int kfont_write_psffont_write(struct kfont_ctx *ctx,
                        FILE *filename, char *fontbuf,
                        size_t width, size_t height, size_t fontlen, int psftype,
                        struct unicode_list *uclistheads);
 
 #define WPSFH_HASTAB 1
 #define WPSFH_HASSEQ 2
-int kfont_write_psffontheader(struct kfont_ctx *ctx, FILE *ofil,
-                             size_t width, size_t height, size_t fontlen,
-                             int *psftype, int flags);
+int kfont_write_psffontheader(struct kfont_ctx *ctx, FILE *ofil, struct psffont *font, int flags);
 
 #include <psf.h>
 
