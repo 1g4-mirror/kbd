@@ -67,11 +67,9 @@ struct reachable_sym {
 
 enum xkeymap_modifier_mask {
 	XKEYMAP_MASK_SHIFT,
-	XKEYMAP_MASK_LOCK,
 	XKEYMAP_MASK_CONTROL,
 	XKEYMAP_MASK_ALT,
 	XKEYMAP_MASK_LEVEL3,
-	XKEYMAP_MASK_LEVEL5,
 	XKEYMAP_MASK__COUNT,
 };
 
@@ -103,17 +101,6 @@ struct compose_candidate {
  */
 #define KERN_KEYCODE(keycode) (keycode - EVDEV_OFFSET)
 
-/*
- * Copied from libxkbcommon.
- * Don't allow more modifiers than we can hold in xkb_mod_mask_t.
- */
-#define XKB_MAX_MODS ((xkb_mod_index_t)(sizeof(xkb_mod_mask_t) * 8))
-
-struct xkb_mask {
-	xkb_mod_mask_t mask[XKB_MAX_MODS];
-	size_t num;
-};
-
 static xkb_mod_mask_t xkb_mod_bit(xkb_mod_index_t mod);
 static unsigned int xkb_mask_weight(xkb_mod_mask_t mask);
 static int xkeymap_get_symbol(struct xkb_keymap *keymap,
@@ -129,12 +116,10 @@ struct xkeymap_modifier_rule {
 
 static const struct xkeymap_modifier_rule xkeymap_modifier_rules[] = {
 	{ XKEYMAP_MASK_SHIFT,		"Shift",		0,				(1u << KG_SHIFT) },
-	{ XKEYMAP_MASK_LOCK,		"Lock",			0,				(1u << KG_CAPSSHIFT) },
 	{ XKEYMAP_MASK_CONTROL,		"Control",		0,				(1u << KG_CTRL) },
 	{ XKEYMAP_MASK_ALT,		NULL,			XKB_KEY_Alt_L,			(1u << KG_ALT) },
 	{ XKEYMAP_MASK_ALT,		NULL,			XKB_KEY_Alt_R,			(1u << KG_ALT) },
 	{ XKEYMAP_MASK_LEVEL3,		NULL,			XKB_KEY_ISO_Level3_Shift,	(1u << KG_ALTGR) },
-	{ XKEYMAP_MASK_LEVEL5,		NULL,			XKB_KEY_ISO_Level5_Shift,	0 },
 };
 
 static xkb_mod_mask_t xkeymap_mod_mask_by_name(struct xkb_keymap *keymap, const char *name)
@@ -226,10 +211,9 @@ static void xkeymap_init_modifier_masks(struct xkeymap *xkeymap)
 	memset(xkeymap->modifier_masks, 0, sizeof(xkeymap->modifier_masks));
 
 	/*
-	 * xkb_keymap_key_get_mods_for_level() returns masks in the keymap's real
-	 * modifier encoding. XKB rulesets are free to bind semantic modifiers
-	 * like LevelThree and LevelFive to different real ModN bits, so derive
-	 * those masks from the compiled keymap instead of hardcoding Mod3/Mod5.
+	 * xkb_state_update_mask() takes real modifier masks. XKB rulesets may
+	 * bind Alt and LevelThree to different ModN bits, so derive their masks
+	 * from the compiled keymap instead of assuming fixed assignments.
 	 */
 	for (size_t i = 0; i < ARRAY_SIZE(xkeymap_modifier_rules); i++) {
 		const struct xkeymap_modifier_rule *rule = &xkeymap_modifier_rules[i];
@@ -278,33 +262,6 @@ static unsigned int xkb_mask_weight(xkb_mod_mask_t mask)
 	}
 
 	return weight;
-}
-
-static void xkeymap_keycode_mask(struct xkb_keymap *keymap,
-                                 xkb_layout_index_t layout, xkb_level_index_t level, xkb_keycode_t keycode,
-                                 struct xkb_mask *out)
-{
-	size_t i, j;
-
-	memset(out->mask, 0, sizeof(out->mask));
-	out->num = xkb_keymap_key_get_mods_for_level(keymap, keycode, layout, level, out->mask, ARRAY_SIZE(out->mask));
-
-	/*
-	 * XKB may expose several masks for the same level.  Prefer the
-	 * simplest one so the resulting kernel table stays deterministic.
-	 */
-	for (i = 0; i < out->num; i++) {
-		for (j = i + 1; j < out->num; j++) {
-			unsigned int lhs = xkb_mask_weight(out->mask[i]);
-			unsigned int rhs = xkb_mask_weight(out->mask[j]);
-
-			if (rhs < lhs || (rhs == lhs && out->mask[j] < out->mask[i])) {
-				xkb_mod_mask_t tmp = out->mask[i];
-				out->mask[i] = out->mask[j];
-				out->mask[j] = tmp;
-			}
-		}
-	}
 }
 
 static int parse_hexcode(struct lk_ctx *ctx, const char *symname)
@@ -594,111 +551,52 @@ static int xkeymap_is_capslockable(xkb_keysym_t sym, int code)
 	return 0;
 }
 
-static void xkeymap_add_value(struct xkeymap *xkeymap, int modifier, int code,
-			      int capslockable, int keyvalue[MAX_NR_KEYMAPS])
+/* Convert modifiers left over after XKB has selected the key's level. */
+static int xkeymap_apply_modifiers(struct xkeymap *xkeymap, struct xkb_state *state,
+				   xkb_keycode_t key, unsigned int mods, int code)
 {
-	if (modifier < 0 || modifier >= MAX_NR_KEYMAPS)
-		return;
+	xkb_mod_mask_t consumed = xkb_state_key_get_consumed_mods(state, key);
+	const xkb_keysym_t *syms;
+	int count = xkb_state_key_get_syms(state, key, &syms);
 
-	/*
-	 * The kernel's CapsLock handling already inverts Shift for KT_LETTER.
-	 * Mark only the non-shifted binding as a letter; if the shifted binding
-	 * is also tagged, dumps become "+a +A" and Shift+CapsLock yields the
-	 * wrong case for XKB levels that already provide an explicit uppercase
-	 * symbol.
-	 */
-	if (capslockable && !(modifier & (1 << KG_SHIFT)))
-		code = lk_add_capslock(xkeymap->ctx, code);
+	if ((mods & (1u << KG_CTRL)) &&
+	    !(consumed & xkeymap->modifier_masks[XKEYMAP_MASK_CONTROL]) &&
+	    count == 1 && xkb_keysym_to_utf32(syms[0]) &&
+	    (code >= 0x1000 || KTYP(code) == KT_LATIN || KTYP(code) == KT_LETTER)) {
+		uint32_t unicode = xkb_state_key_get_utf32(state, key);
 
-	if (keyvalue[modifier])
-		return;
-
-	keyvalue[modifier] = code;
-}
-
-static int get_kernel_modifier(struct xkeymap *xkeymap, xkb_mod_mask_t xkbmask, int *modifier)
-{
-	int ret = 0;
-	unsigned int kernel_modifier = 0;
-	size_t i;
-
-	for (i = 0; i < ARRAY_SIZE(xkeymap_modifier_rules); i++) {
-		const struct xkeymap_modifier_rule *rule = &xkeymap_modifier_rules[i];
-		xkb_mod_mask_t mask = xkeymap->modifier_masks[rule->mask];
-
-		if (!mask || !rule->kernel_bit)
-			continue;
-
-		if ((xkbmask & mask) != mask)
-			continue;
-
-		kernel_modifier |= rule->kernel_bit;
-		xkbmask &= ~mask;
-		ret = 1;
+		if (unicode < 0x80)
+			code = K(KT_LATIN, (int) unicode);
 	}
 
-	/*
-	 * The Linux VT has no distinct LevelFive modifier state. Mapping it to
-	 * Alt would silently merge unrelated XKB levels into the Alt tables, so
-	 * treat LevelFive-only states as unrepresentable.
-	 */
-	if (xkeymap->modifier_masks[XKEYMAP_MASK_LEVEL5] &&
-	    (xkbmask & xkeymap->modifier_masks[XKEYMAP_MASK_LEVEL5]) ==
-		    xkeymap->modifier_masks[XKEYMAP_MASK_LEVEL5])
-		return -1;
-
-	/* Ignore XKB states that have no safe kernel-table representation. */
-	if (xkbmask)
-		return -1;
-
-	*modifier = (int) kernel_modifier;
-	return ret;
-}
-
-static int xkeymap_pick_kernel_modifier(struct xkeymap *xkeymap,
-					const struct xkb_mask *keycode_mask,
-					int *modifier)
-{
-	/*
-	 * XKB may report several equivalent masks for one level because key
-	 * types can preserve modifiers while still resolving to the same
-	 * symbol.  In the kernel keymap model these masks would compete for
-	 * one table slot, so pick only the simplest representable mask and
-	 * treat it as the canonical binding for that level.
-	 */
-	for (size_t mask_index = 0; mask_index < keycode_mask->num; mask_index++) {
-		int ret;
-
-		ret = get_kernel_modifier(xkeymap, keycode_mask->mask[mask_index], modifier);
-		if (ret < 0)
-			continue;
-
-		return ret;
+	/* Unconsumed Alt retains the console's Meta behavior. */
+	if ((mods & (1u << KG_ALT)) &&
+	    !(consumed & xkeymap->modifier_masks[XKEYMAP_MASK_ALT])) {
+		if (code >= 0x1000 && (code ^ 0xf000) < 0x80)
+			code = K(KT_META, code ^ 0xf000);
+		else if ((KTYP(code) == KT_LATIN || KTYP(code) == KT_LETTER) &&
+			 KVAL(code) < 0x80)
+			code = K(KT_META, KVAL(code));
 	}
 
-	return -1;
+	return code;
 }
 
 static int xkeymap_walk(struct xkeymap *xkeymap)
 {
-	struct xkb_mask keycode_mask;
-	xkb_keycode_t min_keycode = xkb_keymap_min_keycode(xkeymap->keymap);
-	xkb_keycode_t max_keycode = xkb_keymap_max_keycode(xkeymap->keymap);
-
-	if (KERN_KEYCODE(min_keycode) >= NR_KEYS)
-		min_keycode = (NR_KEYS - 1) + EVDEV_OFFSET;
-
-	if (KERN_KEYCODE(max_keycode) >= NR_KEYS)
-		max_keycode = (NR_KEYS - 1) + EVDEV_OFFSET;
-
-	int shift       = lk_ksym_to_unicode(xkeymap->ctx, "Shift");
-	int shiftl      = lk_ksym_to_unicode(xkeymap->ctx, "ShiftL");
-	int shiftr      = lk_ksym_to_unicode(xkeymap->ctx, "ShiftR");
-	int shift_lock  = lk_ksym_to_unicode(xkeymap->ctx, "Shift_Lock");
+	struct xkb_state *state;
+	lk_keywords keywords = lk_get_keywords(xkeymap->ctx);
+	xkb_mod_mask_t masks[16] = { 0 };
+	xkb_layout_index_t num_layouts = xkb_keymap_num_layouts(xkeymap->keymap);
+	xkb_keycode_t min = xkb_keymap_min_keycode(xkeymap->keymap);
+	xkb_keycode_t max = xkb_keymap_max_keycode(xkeymap->keymap);
+	int shift = lk_ksym_to_unicode(xkeymap->ctx, "Shift");
+	int shiftl = lk_ksym_to_unicode(xkeymap->ctx, "ShiftL");
+	int shiftr = lk_ksym_to_unicode(xkeymap->ctx, "ShiftR");
+	int shift_lock = lk_ksym_to_unicode(xkeymap->ctx, "Shift_Lock");
 	int shiftl_lock = lk_ksym_to_unicode(xkeymap->ctx, "ShiftL_Lock");
 	int shiftr_lock = lk_ksym_to_unicode(xkeymap->ctx, "ShiftR_Lock");
-
-	xkb_layout_index_t num_layouts = xkb_keymap_num_layouts(xkeymap->keymap);
+	int ret = -1;
 
 	if (num_layouts == 0 || num_layouts > NR_LAYOUTS) {
 		XKEYMAP_WARNING(0, _("unable to convert XKB layouts: unsupported layout count %u"),
@@ -706,137 +604,78 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 		return -1;
 	}
 
-	/*
-	 * Pick the languages layout. The switching order depends on the
-	 * number of languages (xkb layouts).
-	 */
-	const unsigned int *kmap_layout = layouts[num_layouts - 1];
+	state = xkb_state_new(xkeymap->keymap);
+	if (!state)
+		return -1;
 
-	for (xkb_keycode_t keycode = min_keycode; keycode <= max_keycode; keycode++) {
-		int keyvalue[MAX_NR_KEYMAPS];
+	if (min < EVDEV_OFFSET)
+		min = EVDEV_OFFSET;
+	if (max >= NR_KEYS + EVDEV_OFFSET)
+		max = NR_KEYS + EVDEV_OFFSET - 1;
 
-		memset(keyvalue, 0, sizeof(keyvalue));
+	/* Shift, AltGr, Control and Alt occupy the four low console bits. */
+	for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
+		for (size_t i = 0; i < ARRAY_SIZE(xkeymap_modifier_rules); i++) {
+			const struct xkeymap_modifier_rule *rule = &xkeymap_modifier_rules[i];
 
-		if (xkb_keymap_num_layouts_for_key(xkeymap->keymap, keycode) == 0)
-			continue;
+			if (mods & rule->kernel_bit)
+				masks[mods] |= xkeymap->modifier_masks[rule->mask];
+		}
+	}
 
-		/*
-		 * A mapping of keycodes to symbols, actions and key types.
-		 *
-		 * A user who deals with multiple languages may need two or more
-		 * different layouts: e.g. a layout for Arabic and another one for
-		 * English. In this context, layouts are called _groups_ in XKB,
-		 * as defined in the [standard ISO/IEC&nbsp;9995][ISO9995].
-		 *
-		 * Layouts are ordered and identified by their index. Example:
-		 *
-		 * - Layout 1: Arabic
-		 * - Layout 2: English
-		 *
-		 * See: https://github.com/xkbcommon/libxkbcommon/blob/master/doc/keymap-format-text-v1.md
-		 */
-		/*
-		 * Iterate over all layouts in the keymap, not just the layouts
-		 * explicitly defined for this key. XKB normalizes out-of-range
-		 * per-key layout indexes back into range for these queries, so
-		 * walking all global layouts is required to preserve group
-		 * fallback semantics in the kernel table.
-		 */
-		for (xkb_layout_index_t layout = 0; layout < num_layouts; layout++) {
-			xkb_level_index_t num_levels = xkb_keymap_num_levels_for_key(xkeymap->keymap, keycode, layout);
+	/* Every Meta binding is resolved below; do not synthesize one early. */
+	lk_set_keywords(xkeymap->ctx, keywords & ~(unsigned int) LK_KEYWORD_ALTISMETA);
 
-			/*
-			 * A key type defines the levels available for a key and
-			 * how to derive the active level from the modifiers states. Examples:
-			 * - `ONE_LEVEL`: the key has only one level, i.e. it is not affected
-			 *    by any modifiers. Example: the modifiers themselves.
-			 * - `TWO_LEVEL`: the key has two levels:
-			 *   - Level 1: default level, active when the `Shift` modifier is _not_ active.
-			 *   - Level 2: level activated with the `Shift` modifier.
-			 * - `FOUR_LEVEL`: see the example in the previous section.
-			 *
-			 * See: https://github.com/xkbcommon/libxkbcommon/blob/master/doc/keymap-format-text-v1.md
-			*/
-			for (xkb_level_index_t level = 0; level < num_levels; level++) {
+	for (xkb_keycode_t key = min; key <= max; key++) {
+		/* Let XKB resolve per-key layout fallback for every console group. */
+		for (unsigned int group = 0; group < NR_LAYOUTS; group++) {
+			for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
+				xkb_layout_index_t layout;
+				xkb_level_index_t level;
 				xkb_keysym_t sym;
-				int ret, value;
+				int table = layout_switch[group] | (int) mods;
+				int code;
 
-				/*
-				 * In XKB world, a key action defines the effect a key
-				 * has on the state of the keyboard or the state of the display server.
-				 * Examples:
-				 *
-				 * - Change the state of a modifier.
-				 * - Change the active group.
-				 * - Move the mouse pointer.
-				 *
-				 * See: https://github.com/xkbcommon/libxkbcommon/blob/master/doc/keymap-format-text-v1.md
-				 */
-				if (!(ret = xkeymap_get_symbol(xkeymap->keymap, keycode, layout, level, &sym)))
+				/* Level masks omit modifiers ignored by a key's type. */
+				xkb_state_update_mask(state, masks[mods], 0, 0, 0, 0,
+						      layouts[num_layouts - 1][group]);
+				layout = xkb_state_key_get_layout(state, key);
+				if (layout == XKB_LAYOUT_INVALID)
 					continue;
-				else if (ret < 0)
-					goto err;
+				level = xkb_state_key_get_level(state, key, layout);
+				if (level == XKB_LEVEL_INVALID ||
+				    xkeymap_get_symbol(xkeymap->keymap, key, layout, level, &sym) <= 0)
+					continue;
 
-				xkeymap_keycode_mask(xkeymap->keymap, layout, level, keycode, &keycode_mask);
 				if (sym == XKB_KEY_ISO_Next_Group) {
-					int modifier;
-
-					if (xkeymap_pick_kernel_modifier(xkeymap, &keycode_mask, &modifier) < 0)
-						goto process_keycode;
-
-					xkeymap_add_value(xkeymap, modifier | layout_switch[0], shiftl_lock, 0, keyvalue);
-					xkeymap_add_value(xkeymap, modifier | layout_switch[1], shiftr_lock, 0, keyvalue);
-					xkeymap_add_value(xkeymap, modifier | layout_switch[2], shiftr_lock, 0, keyvalue);
-					xkeymap_add_value(xkeymap, modifier | layout_switch[3], shiftl_lock, 0, keyvalue);
-
-					goto process_keycode;
-				}
-
-				if ((value = xkeymap_get_code(xkeymap, sym)) < 0)
-					continue;
-
-				/*
-				 * Replace ShiftL/ShiftR by Shift to protect
-				 * layout switches.
-				 */
-				if (value == shiftl ||
-				    value == shiftr)
-					value = shift;
-
-				if (value == shiftl_lock ||
-				    value == shiftr_lock)
-					value = shift_lock;
-
-				remember_reachable_sym(xkeymap, sym, value);
-
-				{
-					int modifier;
-
-					if (xkeymap_pick_kernel_modifier(xkeymap, &keycode_mask, &modifier) < 0)
+					code = (group == 0 || group == 3) ? shiftl_lock : shiftr_lock;
+				} else {
+					code = xkeymap_get_code(xkeymap, sym);
+					if (code < 0)
 						continue;
 
-					for (unsigned short i = 0; i < NR_LAYOUTS; i++) {
-						if (layout != kmap_layout[i])
-							continue;
-						xkeymap_add_value(xkeymap, modifier | layout_switch[i], value,
-								 xkeymap_is_capslockable(sym, value), keyvalue);
-					}
+					/* Reserve ShiftL/ShiftR for layout switching. */
+					if (code == shiftl || code == shiftr)
+						code = shift;
+					if (code == shiftl_lock || code == shiftr_lock)
+						code = shift_lock;
+
+					remember_reachable_sym(xkeymap, sym, code);
+					if (!(mods & (1u << KG_SHIFT)) && xkeymap_is_capslockable(sym, code))
+						code = lk_add_capslock(xkeymap->ctx, code);
+					code = xkeymap_apply_modifiers(xkeymap, state, key, mods, code);
 				}
+
+				if (lk_add_key(xkeymap->ctx, table, (int) KERN_KEYCODE(key), code) < 0)
+					goto end;
 			}
 		}
-
-process_keycode:
-			for (unsigned short i = 0; i < ARRAY_SIZE(keyvalue); i++) {
-				if (!keyvalue[i])
-					continue;
-				if (lk_add_key(xkeymap->ctx, i, (int) KERN_KEYCODE(keycode), keyvalue[i]) < 0)
-					goto err;
-			}
-		}
-
-	return 0;
-err:
-	return -1;
+	}
+	ret = 0;
+end:
+	lk_set_keywords(xkeymap->ctx, keywords);
+	xkb_state_unref(state);
+	return ret;
 }
 
 static int xkeymap_fill_modifier_release_bindings(struct xkeymap *xkeymap)

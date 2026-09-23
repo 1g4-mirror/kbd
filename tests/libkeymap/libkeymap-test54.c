@@ -50,6 +50,16 @@ expect_key_symbol(struct lk_ctx *ctx, int table, int keycode, const char *expect
 }
 
 static void
+expect_key_code(struct lk_ctx *ctx, int table, int keycode, int expected)
+{
+	int actual = lk_get_key(ctx, table, keycode);
+
+	if (actual != expected)
+		kbd_error(EXIT_FAILURE, 0, "Unexpected code in table %d keycode %d: got %#x expected %#x",
+			  table, keycode, actual, expected);
+}
+
+static void
 test_basic_us_layout(void)
 {
 	struct parsed_keymap keymap;
@@ -70,6 +80,23 @@ test_basic_us_layout(void)
 	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 16)) != KT_LATIN)
 		kbd_error(EXIT_FAILURE, 0, "Shifted latin level must not be CapsLock-tagged");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 42, "Shift");
+	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 28, "Return");
+	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 57, "space");
+	expect_key_symbol(keymap.ctx, 1 << KG_CTRL, 46, "Control_c");
+	expect_key_symbol(keymap.ctx, (1 << KG_CTRL) | (1 << KG_SHIFT), 46, "Control_c");
+	expect_key_code(keymap.ctx, 1 << KG_ALT, 30, K(KT_META, 'a'));
+	expect_key_code(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 30, K(KT_META, 'A'));
+	expect_key_code(keymap.ctx, (1 << KG_CTRL) | (1 << KG_ALT), 46, K(KT_META, 3));
+	for (int table = 0; table < 16; table++) {
+		int space = (table & (1 << KG_CTRL)) ? 0 : ' ';
+
+		if (table & (1 << KG_ALT))
+			space = K(KT_META, space);
+		expect_key_code(keymap.ctx, table, 57, space);
+		expect_key_code(keymap.ctx, table, 28, K_ENTER);
+		expect_key_code(keymap.ctx, table, 42, K_SHIFT);
+		expect_key_code(keymap.ctx, table, 29, K_CTRL);
+	}
 
 	free_test_keymap(&keymap);
 }
@@ -121,6 +148,8 @@ test_german_altgr(const char *model)
 	expect_key_symbol(keymap.ctx, altgr, 42, "Shift");
 	expect_key_symbol(keymap.ctx, altgr | (1 << KG_SHIFT), 42, "Shift");
 	expect_key_symbol(keymap.ctx, 0, 56, "Alt");
+	expect_key_symbol(keymap.ctx, altgr | (1 << KG_CTRL), 16, "nul");
+	expect_key_code(keymap.ctx, altgr | (1 << KG_ALT), 16, K(KT_META, '@'));
 	expect_key_symbol(keymap.ctx, (1 << KG_CTRL) | (1 << KG_ALT), 59, "Console_1");
 
 	free_test_keymap(&keymap);
@@ -144,6 +173,8 @@ test_group_toggle_layout(void)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us,ru layout");
 
 	expect_key_symbol(keymap.ctx, 0, 58, "ShiftL_Lock");
+	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 58, "Caps_Lock");
+	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_SHIFT), 58, "Caps_Lock");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFTL, 58, "ShiftR_Lock");
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
@@ -156,9 +187,13 @@ test_group_toggle_layout(void)
 	expect_key_symbol(keymap.ctx, (1 << KG_CTRL) | (1 << KG_ALT), 88, "Console_12");
 	expect_key_symbol(keymap.ctx, 0, 99, "Control_backslash");
 	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 99, "Last_Console");
+	expect_key_symbol(keymap.ctx, (1 << KG_CTRL) | (1 << KG_ALT), 99, "Last_Console");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFTL, 16, "cyrillic_small_letter_short_i");
 	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_SHIFT), 16,
 			  "cyrillic_capital_letter_short_i");
+	expect_key_code(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_CTRL) | (1 << KG_SHIFT),
+			28, K_ENTER);
+	expect_key_code(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_SHIFT), 57, ' ');
 
 	free_test_keymap(&keymap);
 }
@@ -234,8 +269,8 @@ test_level5_is_not_collapsed_into_alt(void)
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
 
-	if (lk_get_key(keymap.ctx, 1 << KG_ALT, 16) != K_HOLE)
-		kbd_error(EXIT_FAILURE, 0, "LevelFive symbols must not be collapsed into Alt tables");
+	expect_key_code(keymap.ctx, 1 << KG_ALT, 16, K(KT_META, 'q'));
+	expect_key_code(keymap.ctx, 1 << KG_ALTGR, 16, K_HOLE);
 
 	free_test_keymap(&keymap);
 }
