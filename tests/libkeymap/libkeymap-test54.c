@@ -75,6 +75,58 @@ test_basic_us_layout(void)
 }
 
 static void
+test_german_altgr(const char *model)
+{
+	static const struct {
+		int keycode;
+		const char *plain;
+		const char *shift;
+		const char *altgr;
+	} keys[] = {
+		{ 8,  "seven", "slash",      "braceleft"    },
+		{ 9,  "eight", "parenleft",  "bracketleft"  },
+		{ 10, "nine",  "parenright", "bracketright" },
+		{ 11, "zero",  "equal",      "braceright"   },
+		{ 16, "q",     "Q",          "at"           },
+		{ 18, "e",     "E",          "euro"         },
+		{ 27, "plus",  "asterisk",   "asciitilde"   },
+	};
+	struct parsed_keymap keymap;
+	struct xkeymap_params params = {
+		.model = model,
+		.layout = "de",
+	};
+	int altgr;
+
+	init_test_keymap(&keymap, "xkb-de-altgr");
+	set_xkb_config_root();
+	set_xkb_suppress_warnings();
+
+	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB de layout");
+
+	/* Select the table using the action installed on the right Alt key. */
+	expect_key_symbol(keymap.ctx, 0, 100, "AltGr");
+	altgr = 1 << KVAL(lk_get_key(keymap.ctx, 0, 100));
+	for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+		expect_key_symbol(keymap.ctx, 0, keys[i].keycode, keys[i].plain);
+		expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, keys[i].keycode, keys[i].shift);
+		expect_key_symbol(keymap.ctx, altgr, keys[i].keycode, keys[i].altgr);
+	}
+
+	/* Fourth-level selection and modifier release must use the same tables. */
+	expect_key_symbol(keymap.ctx, altgr | (1 << KG_SHIFT), 27, "macron");
+	expect_key_symbol(keymap.ctx, altgr, 100, "AltGr");
+	expect_key_symbol(keymap.ctx, altgr | (1 << KG_SHIFT), 100, "AltGr");
+	expect_key_symbol(keymap.ctx, altgr, 42, "Shift");
+	expect_key_symbol(keymap.ctx, altgr | (1 << KG_SHIFT), 42, "Shift");
+	expect_key_symbol(keymap.ctx, 0, 56, "Alt");
+	expect_key_symbol(keymap.ctx, (1 << KG_CTRL) | (1 << KG_ALT), 59, "Console_1");
+
+	free_test_keymap(&keymap);
+}
+
+static void
 test_group_toggle_layout(void)
 {
 	struct parsed_keymap keymap;
@@ -207,8 +259,8 @@ test_modifier_mask_lookup_across_layouts(void)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB layout with group2-only LevelThree modifier");
 
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFTL, 2, "1");
-	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_ALT), 2, "exclamdown");
-	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_ALT) | (1 << KG_SHIFT), 2,
+	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_ALTGR), 2, "exclamdown");
+	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_ALTGR) | (1 << KG_SHIFT), 2,
 			  "onesuperior");
 
 	free_test_keymap(&keymap);
@@ -218,6 +270,8 @@ int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
 	test_basic_us_layout();
+	test_german_altgr("pc104");
+	test_german_altgr("pc105");
 	test_group_toggle_layout();
 	test_group_select_layout();
 	test_prefer_unicode_does_not_change_xkb_lookup();

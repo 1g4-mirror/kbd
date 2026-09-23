@@ -133,7 +133,7 @@ static const struct xkeymap_modifier_rule xkeymap_modifier_rules[] = {
 	{ XKEYMAP_MASK_CONTROL,		"Control",		0,				(1u << KG_CTRL) },
 	{ XKEYMAP_MASK_ALT,		NULL,			XKB_KEY_Alt_L,			(1u << KG_ALT) },
 	{ XKEYMAP_MASK_ALT,		NULL,			XKB_KEY_Alt_R,			(1u << KG_ALT) },
-	{ XKEYMAP_MASK_LEVEL3,		NULL,			XKB_KEY_ISO_Level3_Shift,	(1u << KG_ALT) },
+	{ XKEYMAP_MASK_LEVEL3,		NULL,			XKB_KEY_ISO_Level3_Shift,	(1u << KG_ALTGR) },
 	{ XKEYMAP_MASK_LEVEL5,		NULL,			XKB_KEY_ISO_Level5_Shift,	0 },
 };
 

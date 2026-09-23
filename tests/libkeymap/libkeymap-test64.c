@@ -59,23 +59,23 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB ru(srp) layout");
 
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 16, "cyrillic_small_letter_je");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 16,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 16, "cyrillic_small_letter_je");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 16,
 			  "cyrillic_capital_letter_je");
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 21, "cyrillic_small_letter_nje");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 21,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 21, "cyrillic_small_letter_nje");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 21,
 			  "cyrillic_capital_letter_nje");
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 37, "cyrillic_small_letter_lje");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 37,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 37, "cyrillic_small_letter_lje");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 37,
 			  "cyrillic_capital_letter_lje");
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 38, "cyrillic_small_letter_dzhe");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 38,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 38, "cyrillic_small_letter_dzhe");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 38,
 			  "cyrillic_capital_letter_dzhe");
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 39, "serbocroatian_cyrillic_small_letter_dje");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 39,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 39, "serbocroatian_cyrillic_small_letter_dje");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 39,
 			  "serbocroatian_cyrillic_capital_letter_dje");
-	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 45, "serbocroatian_cyrillic_small_letter_chje");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALT) | (1 << KG_SHIFT), 45,
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 45, "serbocroatian_cyrillic_small_letter_chje");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 45,
 			  "serbocroatian_cyrillic_capital_letter_chje");
 
 	free_test_keymap(&keymap);
