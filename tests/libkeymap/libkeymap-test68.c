@@ -70,6 +70,9 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	expect_rmlvo("pc104/awesome",               "pc104", "awesome", NULL,         1);
 	expect_rmlvo("pc104/us(level5_test)",       "pc104", "us",    "level5_test", 1);
 
+	/* This valid variant is listed only in evdev.extras.xml. */
+	expect_rmlvo("pc104/us(intl-unicode)", "pc104", "us", "intl-unicode", 1);
+
 	/*
 	 * Unrecognized model.  This used to fall through silently to the
 	 * default keycodes because the evdev rules use a wildcard for every

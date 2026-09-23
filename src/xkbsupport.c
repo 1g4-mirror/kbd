@@ -1427,7 +1427,7 @@ xkeymap_rmlvo_check(const struct xkb_rule_names *names)
 	if (names->model == NULL || *names->model == '\0')
 		return XKEYMAP_RMLVO_OK;
 
-	rxkb = rxkb_context_new(RXKB_CONTEXT_NO_FLAGS);
+	rxkb = rxkb_context_new(RXKB_CONTEXT_LOAD_EXOTIC_RULES);
 	if (rxkb == NULL)
 		return XKEYMAP_RMLVO_MODEL;
 
