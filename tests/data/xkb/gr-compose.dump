@@ -7734,106 +7734,106 @@ plain	keycode 210 = Control_backslash
 	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 	shift	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 
-compose '' '' to acute
-compose '' '' to macron
-compose '' '' to cent
-compose '' '' to diaeresis
-compose ' ' ' ' to grave
-compose '' '' to asciitilde
-compose '' '' to greek_ypogegrammeni
-compose '' ' ' to macron
-compose '' ' ' to cent
-compose ' ' '‘' to U+1fba
-compose ' ' '•' to U+1fc8
-compose ' ' '—' to U+1fca
-compose ' ' '™' to U+1fda
-compose ' ' 'Ÿ' to U+1ff8
-compose ' ' '¥' to U+1fea
-compose ' ' '©' to U+1ffa
-compose ' ' '±' to U+1f70
-compose ' ' 'µ' to U+1f72
-compose ' ' '·' to U+1f74
-compose ' ' '¹' to U+1f76
-compose ' ' '¿' to U+1f78
-compose ' ' 'Å' to U+1f7a
-compose ' ' 'É' to U+1f7c
-compose '' '‘' to Alphaaccent
-compose '' '•' to Epsilonaccent
-compose '' '—' to Etaaccent
-compose '' '™' to Iotaaccent
-compose '' 'Ÿ' to Omicronaccent
-compose '' '¥' to Upsilonaccent
-compose '' '©' to Omegaaccent
-compose '' '±' to alphaaccent
-compose '' 'µ' to epsilonaccent
-compose '' '·' to etaaccent
-compose '' '¹' to iotaaccent
-compose '' '¿' to omicronaccent
-compose '' 'Å' to upsilonaccent
-compose '' 'É' to omegaaccent
-compose '' '<' to U+2272
-compose '' '=' to U+2243
-compose '' '>' to U+2273
-compose '' '±' to U+1fb6
-compose '' '·' to U+1fc6
-compose '' '¹' to U+1fd6
-compose '' 'Å' to U+1fe6
-compose '' 'É' to U+1ff6
-compose '' '‘' to U+1fb9
-compose '' '™' to U+1fd9
-compose '' '¥' to U+1fe9
-compose '' '±' to U+1fb1
-compose '' '¹' to U+1fd1
-compose '' 'Å' to U+1fe1
-compose '' '‘' to U+1fb8
-compose '' '™' to U+1fd8
-compose '' '¥' to U+1fe8
-compose '' '±' to U+1fb0
-compose '' '¹' to U+1fd0
-compose '' 'Å' to U+1fe0
-compose '' '\'' to U+0344
-compose '' '™' to Iotadiaeresis
-compose '' '¥' to Upsilondiaeresis
-compose '' '¹' to iotadiaeresis
-compose '' 'Å' to upsilondiaeresis
-compose '' '‘' to U+1fbc
-compose '' '—' to U+1fcc
-compose '' '©' to U+1ffc
-compose '' '±' to U+1fb3
-compose '' '·' to U+1fc3
-compose '' 'É' to U+1ff3
-compose '' '‘' to U+1f08
-compose '' '•' to U+1f18
-compose '' '—' to U+1f28
-compose '' '™' to U+1f38
-compose '' 'Ÿ' to U+1f48
-compose '' '©' to U+1f68
-compose '' '±' to U+1f00
-compose '' 'µ' to U+1f10
-compose '' '·' to U+1f20
-compose '' '¹' to U+1f30
-compose '' '¿' to U+1f40
-compose '' 'Á' to U+1fe4
-compose '' 'Å' to U+1f50
-compose '' 'É' to U+1f60
-compose '' '‘' to U+1f09
-compose '' '•' to U+1f19
-compose '' '—' to U+1f29
-compose '' '™' to U+1f39
-compose '' 'Ÿ' to U+1f49
-compose '' '¡' to U+1fec
-compose '' '¥' to U+1f59
-compose '' '©' to U+1f69
-compose '' '±' to U+1f01
-compose '' 'µ' to U+1f11
-compose '' '·' to U+1f21
-compose '' '¹' to U+1f31
-compose '' '¿' to U+1f41
-compose '' 'Á' to U+1fe5
-compose '' 'Å' to U+1f51
-compose '' 'É' to U+1f61
-compose ' ' ' ' to grave
-compose '' ' ' to apostrophe
-compose '' ' ' to asciitilde
-compose '' ' ' to quotedbl
-compose '' ' ' to greek_ypogegrammeni
+compose 'i' 'i' to greek_ypogegrammeni
+compose '\'' '\'' to acute
+compose '_' '_' to macron
+compose '~' '~' to cent
+compose '"' '"' to diaeresis
+compose '`' '`' to grave
+compose '~' '~' to asciitilde
+compose '_' ' ' to macron
+compose '~' ' ' to cent
+compose '`' '‘' to U+1fba
+compose '`' '•' to U+1fc8
+compose '`' '—' to U+1fca
+compose '`' '™' to U+1fda
+compose '`' 'Ÿ' to U+1ff8
+compose '`' '¥' to U+1fea
+compose '`' '©' to U+1ffa
+compose '`' '±' to U+1f70
+compose '`' 'µ' to U+1f72
+compose '`' '·' to U+1f74
+compose '`' '¹' to U+1f76
+compose '`' '¿' to U+1f78
+compose '`' 'Å' to U+1f7a
+compose '`' 'É' to U+1f7c
+compose '\'' '‘' to Alphaaccent
+compose '\'' '•' to Epsilonaccent
+compose '\'' '—' to Etaaccent
+compose '\'' '™' to Iotaaccent
+compose '\'' 'Ÿ' to Omicronaccent
+compose '\'' '¥' to Upsilonaccent
+compose '\'' '©' to Omegaaccent
+compose '\'' '±' to alphaaccent
+compose '\'' 'µ' to epsilonaccent
+compose '\'' '·' to etaaccent
+compose '\'' '¹' to iotaaccent
+compose '\'' '¿' to omicronaccent
+compose '\'' 'Å' to upsilonaccent
+compose '\'' 'É' to omegaaccent
+compose '~' '<' to U+2272
+compose '~' '=' to U+2243
+compose '~' '>' to U+2273
+compose '~' '±' to U+1fb6
+compose '~' '·' to U+1fc6
+compose '~' '¹' to U+1fd6
+compose '~' 'Å' to U+1fe6
+compose '~' 'É' to U+1ff6
+compose '_' '‘' to U+1fb9
+compose '_' '™' to U+1fd9
+compose '_' '¥' to U+1fe9
+compose '_' '±' to U+1fb1
+compose '_' '¹' to U+1fd1
+compose '_' 'Å' to U+1fe1
+compose '~' '‘' to U+1fb8
+compose '~' '™' to U+1fd8
+compose '~' '¥' to U+1fe8
+compose '~' '±' to U+1fb0
+compose '~' '¹' to U+1fd0
+compose '~' 'Å' to U+1fe0
+compose '"' '\'' to U+0344
+compose '"' '™' to Iotadiaeresis
+compose '"' '¥' to Upsilondiaeresis
+compose '"' '¹' to iotadiaeresis
+compose '"' 'Å' to upsilondiaeresis
+compose 'i' '‘' to U+1fbc
+compose 'i' '—' to U+1fcc
+compose 'i' '©' to U+1ffc
+compose 'i' '±' to U+1fb3
+compose 'i' '·' to U+1fc3
+compose 'i' 'É' to U+1ff3
+compose ')' '‘' to U+1f08
+compose ')' '•' to U+1f18
+compose ')' '—' to U+1f28
+compose ')' '™' to U+1f38
+compose ')' 'Ÿ' to U+1f48
+compose ')' '©' to U+1f68
+compose ')' '±' to U+1f00
+compose ')' 'µ' to U+1f10
+compose ')' '·' to U+1f20
+compose ')' '¹' to U+1f30
+compose ')' '¿' to U+1f40
+compose ')' 'Á' to U+1fe4
+compose ')' 'Å' to U+1f50
+compose ')' 'É' to U+1f60
+compose '(' '‘' to U+1f09
+compose '(' '•' to U+1f19
+compose '(' '—' to U+1f29
+compose '(' '™' to U+1f39
+compose '(' 'Ÿ' to U+1f49
+compose '(' '¡' to U+1fec
+compose '(' '¥' to U+1f59
+compose '(' '©' to U+1f69
+compose '(' '±' to U+1f01
+compose '(' 'µ' to U+1f11
+compose '(' '·' to U+1f21
+compose '(' '¹' to U+1f31
+compose '(' '¿' to U+1f41
+compose '(' 'Á' to U+1fe5
+compose '(' 'Å' to U+1f51
+compose '(' 'É' to U+1f61
+compose '`' ' ' to grave
+compose '\'' ' ' to apostrophe
+compose '~' ' ' to asciitilde
+compose '"' ' ' to quotedbl
+compose 'i' ' ' to greek_ypogegrammeni

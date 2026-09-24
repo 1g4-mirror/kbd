@@ -162,6 +162,65 @@ test_console_dead_rule_policy_prefers_historic_letter_sets(void)
 		kbd_error(EXIT_FAILURE, 0, "Unexpected preferred dead-key rule for dead_caron + q");
 }
 
+static void
+test_dead_key_compose_inputs(int unicode)
+{
+	static const char compose[] =
+		"<dead_acute> <a> : \"á\" aacute\n"
+		"<dead_acute> <dead_acute> : \"´\" acute\n";
+	struct parsed_keymap keymap;
+	struct xkeymap xkeymap = { 0 };
+	int direction = unicode ? TO_UNICODE : TO_8BIT;
+	int found_letter = 0, found_dead = 0;
+
+	init_test_keymap(&keymap, "xkb-dead-compose");
+	xkeymap.ctx = keymap.ctx;
+	if (unicode && lk_set_parser_flags(keymap.ctx, LK_FLAG_PREFER_UNICODE) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to enable Unicode conversion");
+	xkeymap.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (!xkeymap.xkb)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+	xkeymap.compose = xkb_compose_table_new_from_buffer(xkeymap.xkb, compose,
+							    sizeof(compose) - 1, "C",
+							    XKB_COMPOSE_FORMAT_TEXT_V1,
+							    XKB_COMPOSE_COMPILE_NO_FLAGS);
+	if (!xkeymap.compose)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile dead-key compose rules");
+
+	remember_reachable_sym(&xkeymap, XKB_KEY_dead_acute,
+			       xkeymap_get_code(&xkeymap, XKB_KEY_dead_acute));
+	remember_reachable_sym(&xkeymap, XKB_KEY_a, xkeymap_get_code(&xkeymap, XKB_KEY_a));
+	if (xkeymap_compose(&xkeymap) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to import dead-key compose rules");
+
+	for (int i = 0; lk_diacr_exists(keymap.ctx, i); i++) {
+		struct lk_kbdiacr rule;
+
+		if (lk_get_diacr(keymap.ctx, i, &rule) != 0)
+			kbd_error(EXIT_FAILURE, 0, "Unable to read compose rule");
+		if (rule.base == (unsigned int) lk_convert_code(keymap.ctx, 'a', direction)) {
+			expect_rule(keymap.ctx, i,
+				    (unsigned int) lk_convert_code(keymap.ctx, '\'', direction),
+				    rule.base,
+				    (unsigned int) lk_convert_code(keymap.ctx, 0xe1 ^ 0xf000, direction));
+			found_letter++;
+		} else {
+			expect_rule(keymap.ctx, i,
+				    (unsigned int) lk_convert_code(keymap.ctx, '\'', direction),
+				    (unsigned int) lk_convert_code(keymap.ctx, '\'', direction),
+				    (unsigned int) lk_convert_code(keymap.ctx, 0xb4 ^ 0xf000, direction));
+			found_dead++;
+		}
+	}
+	if (found_letter != 1 || found_dead != 1)
+		kbd_error(EXIT_FAILURE, 0, "Missing or duplicate dead-key compose rule");
+
+	tdestroy(xkeymap.reachable_syms, free);
+	xkb_compose_table_unref(xkeymap.compose);
+	xkb_context_unref(xkeymap.xkb);
+	free_test_keymap(&keymap);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
@@ -169,6 +228,8 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_kernel_rule_dedup_happens_after_selection();
 	test_compose_append_uses_kbd_conversion_rules();
 	test_console_dead_rule_policy_prefers_historic_letter_sets();
+	test_dead_key_compose_inputs(0);
+	test_dead_key_compose_inputs(1);
 
 	return EXIT_SUCCESS;
 }

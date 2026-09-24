@@ -1012,6 +1012,50 @@ static int xkeymap_symbol_is_reachable(struct xkeymap *xkeymap, xkb_keysym_t sym
 	return 1;
 }
 
+static int xkeymap_compose_input_code(int code)
+{
+	/* Match the characters passed to k_deadunicode() by Linux k_dead(). */
+	static const unsigned char dead_chars[] = {
+		'`',  /* dead_grave */
+		'\'', /* dead_acute */
+		'^',  /* dead_circumflex */
+		'~',  /* dead_tilde */
+		'"',  /* dead_diaeresis */
+		',',  /* dead_cedilla */
+		'_',  /* dead_macron */
+		'U',  /* dead_breve */
+		'.',  /* dead_abovedot */
+		'*',  /* dead_abovering */
+		'=',  /* dead_doubleacute */
+		'c',  /* dead_caron */
+		'k',  /* dead_ogonek */
+		'i',  /* dead_iota */
+		'#',  /* dead_voiced_sound */
+		'o',  /* dead_semivoiced_sound */
+		'!',  /* dead_belowdot */
+		'?',  /* dead_hook */
+		'+',  /* dead_horn */
+		'-',  /* dead_stroke */
+		')',  /* dead_abovecomma */
+		'(',  /* dead_abovereversedcomma */
+		':',  /* dead_doublegrave */
+		'n',  /* dead_invertedbreve */
+		';',  /* dead_belowcomma */
+		'$',  /* dead_currency */
+		'@',  /* dead_greek */
+	};
+
+	if (KTYP(code) == KT_DEAD) {
+		if (KVAL(code) >= ARRAY_SIZE(dead_chars))
+			return -1;
+		return dead_chars[KVAL(code)];
+	}
+	if (KTYP(code) == KT_DEAD2)
+		return KVAL(code) ^ 0xf000;
+
+	return code;
+}
+
 static int xkeymap_compose_candidate_from_entry(struct xkeymap *xkeymap,
 						struct xkb_compose_table_entry *entry,
 						struct compose_candidate *candidate)
@@ -1026,10 +1070,16 @@ static int xkeymap_compose_candidate_from_entry(struct xkeymap *xkeymap,
 
 	if (!xkeymap_symbol_is_reachable(xkeymap, syms[0], &code))
 		return 0;
+	code = xkeymap_compose_input_code(code);
+	if (code < 0)
+		return 0;
 	candidate->diacr.diacr = (unsigned int) code;
 	candidate->seq[0] = syms[0];
 
 	if (!xkeymap_symbol_is_reachable(xkeymap, syms[1], &code))
+		return 0;
+	code = xkeymap_compose_input_code(code);
+	if (code < 0)
 		return 0;
 	candidate->diacr.base = (unsigned int) code;
 	candidate->seq[1] = syms[1];
