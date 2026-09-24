@@ -342,6 +342,13 @@ static int xkeymap_lookup_semantic_keysym(struct xkeymap *xkeymap, xkb_keysym_t 
 
 static int xkeymap_get_code_from_semantic_keysym(struct xkeymap *xkeymap, xkb_keysym_t symbol)
 {
+	/* XKB dead keys need the distinct kernel actions, not legacy aliases. */
+	static const struct builtin_keysym_map semantic_dead_map[] = {
+		{ XKB_KEY_dead_caron,       "dead_kcaron"       },
+		{ XKB_KEY_dead_breve,       "dead_kbreve"       },
+		{ XKB_KEY_dead_doubleacute, "dead_kdoubleacute" },
+		{ XKB_KEY_dead_ogonek,      "dead_kogonek"      },
+	};
 	static const struct builtin_keysym_map semantic_modifier_map[] = {
 		{ XKB_KEY_Shift_L,		"Shift" },
 		{ XKB_KEY_Shift_R,		"Shift" },
@@ -400,6 +407,11 @@ static int xkeymap_get_code_from_semantic_keysym(struct xkeymap *xkeymap, xkb_ke
 	};
 	char console[16];
 	int ret;
+
+	ret = xkeymap_lookup_semantic_keysym(xkeymap, symbol, semantic_dead_map,
+					     ARRAY_SIZE(semantic_dead_map));
+	if (ret >= 0)
+		return ret;
 
 	/* Prefer direct semantic actions before Linux VT-specific approximations. */
 	ret = xkeymap_lookup_semantic_keysym(xkeymap, symbol, semantic_modifier_map,

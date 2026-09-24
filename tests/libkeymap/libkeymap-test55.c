@@ -221,6 +221,87 @@ test_dead_key_compose_inputs(int unicode)
 	free_test_keymap(&keymap);
 }
 
+static void
+test_distinct_dead_key_actions(void)
+{
+	static const struct {
+		xkb_keysym_t sym;
+		int action;
+		unsigned int accent, base, result;
+	} cases[] = {
+		{ XKB_KEY_dead_circumflex,  K_DCIRCM,   '^', 'c', 0x0109 },
+		{ XKB_KEY_dead_caron,       K_DCARON,   'c', 'c', 0x010d },
+		{ XKB_KEY_dead_tilde,       K_DTILDE,   '~', 'a', 0x00e3 },
+		{ XKB_KEY_dead_breve,       K_DBREVE,   'U', 'a', 0x0103 },
+		{ XKB_KEY_dead_doubleacute, K_DDBACUTE, '=', 'o', 0x0151 },
+		{ XKB_KEY_dead_cedilla,     K_DCEDIL,   ',', 'c', 0x00e7 },
+		{ XKB_KEY_dead_ogonek,      K_DOGONEK,  'k', 'a', 0x0105 },
+	};
+	static const char compose[] =
+		"<dead_circumflex> <c> : U0109\n"
+		"<dead_caron> <c> : U010D\n"
+		"<dead_tilde> <a> : U00E3\n"
+		"<dead_breve> <a> : U0103\n"
+		"<dead_doubleacute> <o> : U0151\n"
+		"<dead_cedilla> <c> : U00E7\n"
+		"<dead_ogonek> <a> : U0105\n";
+	struct parsed_keymap keymap;
+	struct xkeymap xkeymap = { 0 };
+	unsigned int found = 0;
+
+	init_test_keymap(&keymap, "xkb-distinct-dead-keys");
+	xkeymap.ctx = keymap.ctx;
+	if (lk_set_parser_flags(keymap.ctx, LK_FLAG_PREFER_UNICODE) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to enable Unicode conversion");
+	xkeymap.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (!xkeymap.xkb)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+	xkeymap.compose = xkb_compose_table_new_from_buffer(xkeymap.xkb, compose,
+							    sizeof(compose) - 1, "C", XKB_COMPOSE_FORMAT_TEXT_V1,
+							    XKB_COMPOSE_COMPILE_NO_FLAGS);
+	if (!xkeymap.compose)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile distinct dead-key rules");
+
+	for (size_t i = 0; i < ARRAY_SIZE(cases); i++) {
+		int code = xkeymap_get_code(&xkeymap, cases[i].sym);
+
+		if (code != cases[i].action)
+			kbd_error(EXIT_FAILURE, 0, "Dead keysym 0x%x: got action 0x%x, expected 0x%x",
+				  cases[i].sym, code, cases[i].action);
+		remember_reachable_sym(&xkeymap, cases[i].sym, code);
+		remember_reachable_sym(&xkeymap, cases[i].base,
+				       xkeymap_get_code(&xkeymap, cases[i].base));
+	}
+	if (xkeymap_compose(&xkeymap) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to import distinct dead-key rules");
+
+	for (int i = 0; lk_diacr_exists(keymap.ctx, i); i++) {
+		struct lk_kbdiacr rule;
+		size_t j;
+
+		if (lk_get_diacr(keymap.ctx, i, &rule) != 0)
+			kbd_error(EXIT_FAILURE, 0, "Unable to read compose rule");
+		for (j = 0; j < ARRAY_SIZE(cases); j++) {
+			if (rule.diacr != cases[j].accent || rule.base != cases[j].base)
+				continue;
+			expect_rule(keymap.ctx, i, cases[j].accent, cases[j].base, cases[j].result);
+			if (found & (1U << j))
+				kbd_error(EXIT_FAILURE, 0, "Duplicate dead-key compose input");
+			found |= 1U << j;
+			break;
+		}
+		if (j == ARRAY_SIZE(cases))
+			kbd_error(EXIT_FAILURE, 0, "Unexpected dead-key compose input");
+	}
+	if (found != (1U << ARRAY_SIZE(cases)) - 1)
+		kbd_error(EXIT_FAILURE, 0, "Missing distinct dead-key compose rule");
+
+	tdestroy(xkeymap.reachable_syms, free);
+	xkb_compose_table_unref(xkeymap.compose);
+	xkb_context_unref(xkeymap.xkb);
+	free_test_keymap(&keymap);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
@@ -230,6 +311,7 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_console_dead_rule_policy_prefers_historic_letter_sets();
 	test_dead_key_compose_inputs(0);
 	test_dead_key_compose_inputs(1);
+	test_distinct_dead_key_actions();
 
 	return EXIT_SUCCESS;
 }

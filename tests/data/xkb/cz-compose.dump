@@ -132,67 +132,67 @@ plain	keycode   2 = plus
 plain	keycode   3 = igrave          
 	shift	keycode   3 = two             
 	altgr	keycode   3 = at              
-	shift	altgr	keycode   3 = dead_circumflex 
+	shift	altgr	keycode   3 = dead_kcaron     
 	control	keycode   3 = igrave          
 	shift	control	keycode   3 = nul             
 	altgr	control	keycode   3 = nul             
-	shift	altgr	control	keycode   3 = dead_circumflex 
+	shift	altgr	control	keycode   3 = dead_kcaron     
 	alt	keycode   3 = igrave          
 	shift	alt	keycode   3 = Meta_two        
 	altgr	alt	keycode   3 = Meta_at         
-	shift	altgr	alt	keycode   3 = dead_circumflex 
+	shift	altgr	alt	keycode   3 = dead_kcaron     
 	control	alt	keycode   3 = igrave          
 	shift	control	alt	keycode   3 = Meta_nul        
 	altgr	control	alt	keycode   3 = Meta_nul        
-	shift	altgr	control	alt	keycode   3 = dead_circumflex 
+	shift	altgr	control	alt	keycode   3 = dead_kcaron     
 	shiftl	keycode   3 = igrave          
 	shift	shiftl	keycode   3 = two             
 	altgr	shiftl	keycode   3 = at              
-	shift	altgr	shiftl	keycode   3 = dead_circumflex 
+	shift	altgr	shiftl	keycode   3 = dead_kcaron     
 	control	shiftl	keycode   3 = igrave          
 	shift	control	shiftl	keycode   3 = nul             
 	altgr	control	shiftl	keycode   3 = nul             
-	shift	altgr	control	shiftl	keycode   3 = dead_circumflex 
+	shift	altgr	control	shiftl	keycode   3 = dead_kcaron     
 	alt	shiftl	keycode   3 = igrave          
 	shift	alt	shiftl	keycode   3 = Meta_two        
 	altgr	alt	shiftl	keycode   3 = Meta_at         
-	shift	altgr	alt	shiftl	keycode   3 = dead_circumflex 
+	shift	altgr	alt	shiftl	keycode   3 = dead_kcaron     
 	control	alt	shiftl	keycode   3 = igrave          
 	shift	control	alt	shiftl	keycode   3 = Meta_nul        
 	altgr	control	alt	shiftl	keycode   3 = Meta_nul        
-	shift	altgr	control	alt	shiftl	keycode   3 = dead_circumflex 
+	shift	altgr	control	alt	shiftl	keycode   3 = dead_kcaron     
 	shiftr	keycode   3 = igrave          
 	shift	shiftr	keycode   3 = two             
 	altgr	shiftr	keycode   3 = at              
-	shift	altgr	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	shiftr	keycode   3 = dead_kcaron     
 	control	shiftr	keycode   3 = igrave          
 	shift	control	shiftr	keycode   3 = nul             
 	altgr	control	shiftr	keycode   3 = nul             
-	shift	altgr	control	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	control	shiftr	keycode   3 = dead_kcaron     
 	alt	shiftr	keycode   3 = igrave          
 	shift	alt	shiftr	keycode   3 = Meta_two        
 	altgr	alt	shiftr	keycode   3 = Meta_at         
-	shift	altgr	alt	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	alt	shiftr	keycode   3 = dead_kcaron     
 	control	alt	shiftr	keycode   3 = igrave          
 	shift	control	alt	shiftr	keycode   3 = Meta_nul        
 	altgr	control	alt	shiftr	keycode   3 = Meta_nul        
-	shift	altgr	control	alt	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	control	alt	shiftr	keycode   3 = dead_kcaron     
 	shiftl	shiftr	keycode   3 = igrave          
 	shift	shiftl	shiftr	keycode   3 = two             
 	altgr	shiftl	shiftr	keycode   3 = at              
-	shift	altgr	shiftl	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	shiftl	shiftr	keycode   3 = dead_kcaron     
 	control	shiftl	shiftr	keycode   3 = igrave          
 	shift	control	shiftl	shiftr	keycode   3 = nul             
 	altgr	control	shiftl	shiftr	keycode   3 = nul             
-	shift	altgr	control	shiftl	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	control	shiftl	shiftr	keycode   3 = dead_kcaron     
 	alt	shiftl	shiftr	keycode   3 = igrave          
 	shift	alt	shiftl	shiftr	keycode   3 = Meta_two        
 	altgr	alt	shiftl	shiftr	keycode   3 = Meta_at         
-	shift	altgr	alt	shiftl	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	alt	shiftl	shiftr	keycode   3 = dead_kcaron     
 	control	alt	shiftl	shiftr	keycode   3 = igrave          
 	shift	control	alt	shiftl	shiftr	keycode   3 = Meta_nul        
 	altgr	control	alt	shiftl	shiftr	keycode   3 = Meta_nul        
-	shift	altgr	control	alt	shiftl	shiftr	keycode   3 = dead_circumflex 
+	shift	altgr	control	alt	shiftl	shiftr	keycode   3 = dead_kcaron     
 
 plain	keycode   4 = diaeresis       
 	shift	keycode   4 = three           
@@ -262,67 +262,67 @@ plain	keycode   4 = diaeresis
 plain	keycode   5 = egrave          
 	shift	keycode   5 = four            
 	altgr	keycode   5 = dollar          
-	shift	altgr	keycode   5 = dead_tilde      
+	shift	altgr	keycode   5 = dead_kbreve     
 	control	keycode   5 = egrave          
 	shift	control	keycode   5 = Control_backslash
 	altgr	control	keycode   5 = dollar          
-	shift	altgr	control	keycode   5 = dead_tilde      
+	shift	altgr	control	keycode   5 = dead_kbreve     
 	alt	keycode   5 = egrave          
 	shift	alt	keycode   5 = Meta_four       
 	altgr	alt	keycode   5 = Meta_dollar     
-	shift	altgr	alt	keycode   5 = dead_tilde      
+	shift	altgr	alt	keycode   5 = dead_kbreve     
 	control	alt	keycode   5 = egrave          
 	shift	control	alt	keycode   5 = Meta_Control_backslash
 	altgr	control	alt	keycode   5 = Meta_dollar     
-	shift	altgr	control	alt	keycode   5 = dead_tilde      
+	shift	altgr	control	alt	keycode   5 = dead_kbreve     
 	shiftl	keycode   5 = egrave          
 	shift	shiftl	keycode   5 = four            
 	altgr	shiftl	keycode   5 = dollar          
-	shift	altgr	shiftl	keycode   5 = dead_tilde      
+	shift	altgr	shiftl	keycode   5 = dead_kbreve     
 	control	shiftl	keycode   5 = egrave          
 	shift	control	shiftl	keycode   5 = Control_backslash
 	altgr	control	shiftl	keycode   5 = dollar          
-	shift	altgr	control	shiftl	keycode   5 = dead_tilde      
+	shift	altgr	control	shiftl	keycode   5 = dead_kbreve     
 	alt	shiftl	keycode   5 = egrave          
 	shift	alt	shiftl	keycode   5 = Meta_four       
 	altgr	alt	shiftl	keycode   5 = Meta_dollar     
-	shift	altgr	alt	shiftl	keycode   5 = dead_tilde      
+	shift	altgr	alt	shiftl	keycode   5 = dead_kbreve     
 	control	alt	shiftl	keycode   5 = egrave          
 	shift	control	alt	shiftl	keycode   5 = Meta_Control_backslash
 	altgr	control	alt	shiftl	keycode   5 = Meta_dollar     
-	shift	altgr	control	alt	shiftl	keycode   5 = dead_tilde      
+	shift	altgr	control	alt	shiftl	keycode   5 = dead_kbreve     
 	shiftr	keycode   5 = egrave          
 	shift	shiftr	keycode   5 = four            
 	altgr	shiftr	keycode   5 = dollar          
-	shift	altgr	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	shiftr	keycode   5 = dead_kbreve     
 	control	shiftr	keycode   5 = egrave          
 	shift	control	shiftr	keycode   5 = Control_backslash
 	altgr	control	shiftr	keycode   5 = dollar          
-	shift	altgr	control	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	control	shiftr	keycode   5 = dead_kbreve     
 	alt	shiftr	keycode   5 = egrave          
 	shift	alt	shiftr	keycode   5 = Meta_four       
 	altgr	alt	shiftr	keycode   5 = Meta_dollar     
-	shift	altgr	alt	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	alt	shiftr	keycode   5 = dead_kbreve     
 	control	alt	shiftr	keycode   5 = egrave          
 	shift	control	alt	shiftr	keycode   5 = Meta_Control_backslash
 	altgr	control	alt	shiftr	keycode   5 = Meta_dollar     
-	shift	altgr	control	alt	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	control	alt	shiftr	keycode   5 = dead_kbreve     
 	shiftl	shiftr	keycode   5 = egrave          
 	shift	shiftl	shiftr	keycode   5 = four            
 	altgr	shiftl	shiftr	keycode   5 = dollar          
-	shift	altgr	shiftl	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	shiftl	shiftr	keycode   5 = dead_kbreve     
 	control	shiftl	shiftr	keycode   5 = egrave          
 	shift	control	shiftl	shiftr	keycode   5 = Control_backslash
 	altgr	control	shiftl	shiftr	keycode   5 = dollar          
-	shift	altgr	control	shiftl	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	control	shiftl	shiftr	keycode   5 = dead_kbreve     
 	alt	shiftl	shiftr	keycode   5 = egrave          
 	shift	alt	shiftl	shiftr	keycode   5 = Meta_four       
 	altgr	alt	shiftl	shiftr	keycode   5 = Meta_dollar     
-	shift	altgr	alt	shiftl	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	alt	shiftl	shiftr	keycode   5 = dead_kbreve     
 	control	alt	shiftl	shiftr	keycode   5 = egrave          
 	shift	control	alt	shiftl	shiftr	keycode   5 = Meta_Control_backslash
 	altgr	control	alt	shiftl	shiftr	keycode   5 = Meta_dollar     
-	shift	altgr	control	alt	shiftl	shiftr	keycode   5 = dead_tilde      
+	shift	altgr	control	alt	shiftl	shiftr	keycode   5 = dead_kbreve     
 
 plain	keycode   6 = oslash          
 	shift	keycode   6 = five            
@@ -392,67 +392,67 @@ plain	keycode   6 = oslash
 plain	keycode   7 = cedilla         
 	shift	keycode   7 = six             
 	altgr	keycode   7 = asciicircum     
-	shift	altgr	keycode   7 = dead_cedilla    
+	shift	altgr	keycode   7 = dead_kogonek    
 	control	keycode   7 = cedilla         
 	shift	control	keycode   7 = Control_asciicircum
 	altgr	control	keycode   7 = Control_asciicircum
-	shift	altgr	control	keycode   7 = dead_cedilla    
+	shift	altgr	control	keycode   7 = dead_kogonek    
 	alt	keycode   7 = cedilla         
 	shift	alt	keycode   7 = Meta_six        
 	altgr	alt	keycode   7 = Meta_asciicircum
-	shift	altgr	alt	keycode   7 = dead_cedilla    
+	shift	altgr	alt	keycode   7 = dead_kogonek    
 	control	alt	keycode   7 = cedilla         
 	shift	control	alt	keycode   7 = Meta_Control_asciicircum
 	altgr	control	alt	keycode   7 = Meta_Control_asciicircum
-	shift	altgr	control	alt	keycode   7 = dead_cedilla    
+	shift	altgr	control	alt	keycode   7 = dead_kogonek    
 	shiftl	keycode   7 = cedilla         
 	shift	shiftl	keycode   7 = six             
 	altgr	shiftl	keycode   7 = asciicircum     
-	shift	altgr	shiftl	keycode   7 = dead_cedilla    
+	shift	altgr	shiftl	keycode   7 = dead_kogonek    
 	control	shiftl	keycode   7 = cedilla         
 	shift	control	shiftl	keycode   7 = Control_asciicircum
 	altgr	control	shiftl	keycode   7 = Control_asciicircum
-	shift	altgr	control	shiftl	keycode   7 = dead_cedilla    
+	shift	altgr	control	shiftl	keycode   7 = dead_kogonek    
 	alt	shiftl	keycode   7 = cedilla         
 	shift	alt	shiftl	keycode   7 = Meta_six        
 	altgr	alt	shiftl	keycode   7 = Meta_asciicircum
-	shift	altgr	alt	shiftl	keycode   7 = dead_cedilla    
+	shift	altgr	alt	shiftl	keycode   7 = dead_kogonek    
 	control	alt	shiftl	keycode   7 = cedilla         
 	shift	control	alt	shiftl	keycode   7 = Meta_Control_asciicircum
 	altgr	control	alt	shiftl	keycode   7 = Meta_Control_asciicircum
-	shift	altgr	control	alt	shiftl	keycode   7 = dead_cedilla    
+	shift	altgr	control	alt	shiftl	keycode   7 = dead_kogonek    
 	shiftr	keycode   7 = cedilla         
 	shift	shiftr	keycode   7 = six             
 	altgr	shiftr	keycode   7 = asciicircum     
-	shift	altgr	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	shiftr	keycode   7 = dead_kogonek    
 	control	shiftr	keycode   7 = cedilla         
 	shift	control	shiftr	keycode   7 = Control_asciicircum
 	altgr	control	shiftr	keycode   7 = Control_asciicircum
-	shift	altgr	control	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	control	shiftr	keycode   7 = dead_kogonek    
 	alt	shiftr	keycode   7 = cedilla         
 	shift	alt	shiftr	keycode   7 = Meta_six        
 	altgr	alt	shiftr	keycode   7 = Meta_asciicircum
-	shift	altgr	alt	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	alt	shiftr	keycode   7 = dead_kogonek    
 	control	alt	shiftr	keycode   7 = cedilla         
 	shift	control	alt	shiftr	keycode   7 = Meta_Control_asciicircum
 	altgr	control	alt	shiftr	keycode   7 = Meta_Control_asciicircum
-	shift	altgr	control	alt	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	control	alt	shiftr	keycode   7 = dead_kogonek    
 	shiftl	shiftr	keycode   7 = cedilla         
 	shift	shiftl	shiftr	keycode   7 = six             
 	altgr	shiftl	shiftr	keycode   7 = asciicircum     
-	shift	altgr	shiftl	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	shiftl	shiftr	keycode   7 = dead_kogonek    
 	control	shiftl	shiftr	keycode   7 = cedilla         
 	shift	control	shiftl	shiftr	keycode   7 = Control_asciicircum
 	altgr	control	shiftl	shiftr	keycode   7 = Control_asciicircum
-	shift	altgr	control	shiftl	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	control	shiftl	shiftr	keycode   7 = dead_kogonek    
 	alt	shiftl	shiftr	keycode   7 = cedilla         
 	shift	alt	shiftl	shiftr	keycode   7 = Meta_six        
 	altgr	alt	shiftl	shiftr	keycode   7 = Meta_asciicircum
-	shift	altgr	alt	shiftl	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	alt	shiftl	shiftr	keycode   7 = dead_kogonek    
 	control	alt	shiftl	shiftr	keycode   7 = cedilla         
 	shift	control	alt	shiftl	shiftr	keycode   7 = Meta_Control_asciicircum
 	altgr	control	alt	shiftl	shiftr	keycode   7 = Meta_Control_asciicircum
-	shift	altgr	control	alt	shiftl	shiftr	keycode   7 = dead_cedilla    
+	shift	altgr	control	alt	shiftl	shiftr	keycode   7 = dead_kogonek    
 
 plain	keycode   8 = yacute          
 	shift	keycode   8 = seven           
@@ -652,67 +652,67 @@ plain	keycode  10 = iacute
 plain	keycode  11 = eacute          
 	shift	keycode  11 = zero            
 	altgr	keycode  11 = braceright      
-	shift	altgr	keycode  11 = dead_tilde      
+	shift	altgr	keycode  11 = dead_kdoubleacute
 	control	keycode  11 = eacute          
 	shift	control	keycode  11 = zero            
 	altgr	control	keycode  11 = Control_bracketright
-	shift	altgr	control	keycode  11 = dead_tilde      
+	shift	altgr	control	keycode  11 = dead_kdoubleacute
 	alt	keycode  11 = eacute          
 	shift	alt	keycode  11 = Meta_zero       
 	altgr	alt	keycode  11 = Meta_braceright 
-	shift	altgr	alt	keycode  11 = dead_tilde      
+	shift	altgr	alt	keycode  11 = dead_kdoubleacute
 	control	alt	keycode  11 = eacute          
 	shift	control	alt	keycode  11 = Meta_zero       
 	altgr	control	alt	keycode  11 = Meta_Control_bracketright
-	shift	altgr	control	alt	keycode  11 = dead_tilde      
+	shift	altgr	control	alt	keycode  11 = dead_kdoubleacute
 	shiftl	keycode  11 = eacute          
 	shift	shiftl	keycode  11 = zero            
 	altgr	shiftl	keycode  11 = braceright      
-	shift	altgr	shiftl	keycode  11 = dead_tilde      
+	shift	altgr	shiftl	keycode  11 = dead_kdoubleacute
 	control	shiftl	keycode  11 = eacute          
 	shift	control	shiftl	keycode  11 = zero            
 	altgr	control	shiftl	keycode  11 = Control_bracketright
-	shift	altgr	control	shiftl	keycode  11 = dead_tilde      
+	shift	altgr	control	shiftl	keycode  11 = dead_kdoubleacute
 	alt	shiftl	keycode  11 = eacute          
 	shift	alt	shiftl	keycode  11 = Meta_zero       
 	altgr	alt	shiftl	keycode  11 = Meta_braceright 
-	shift	altgr	alt	shiftl	keycode  11 = dead_tilde      
+	shift	altgr	alt	shiftl	keycode  11 = dead_kdoubleacute
 	control	alt	shiftl	keycode  11 = eacute          
 	shift	control	alt	shiftl	keycode  11 = Meta_zero       
 	altgr	control	alt	shiftl	keycode  11 = Meta_Control_bracketright
-	shift	altgr	control	alt	shiftl	keycode  11 = dead_tilde      
+	shift	altgr	control	alt	shiftl	keycode  11 = dead_kdoubleacute
 	shiftr	keycode  11 = eacute          
 	shift	shiftr	keycode  11 = zero            
 	altgr	shiftr	keycode  11 = braceright      
-	shift	altgr	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	shiftr	keycode  11 = dead_kdoubleacute
 	control	shiftr	keycode  11 = eacute          
 	shift	control	shiftr	keycode  11 = zero            
 	altgr	control	shiftr	keycode  11 = Control_bracketright
-	shift	altgr	control	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	control	shiftr	keycode  11 = dead_kdoubleacute
 	alt	shiftr	keycode  11 = eacute          
 	shift	alt	shiftr	keycode  11 = Meta_zero       
 	altgr	alt	shiftr	keycode  11 = Meta_braceright 
-	shift	altgr	alt	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	alt	shiftr	keycode  11 = dead_kdoubleacute
 	control	alt	shiftr	keycode  11 = eacute          
 	shift	control	alt	shiftr	keycode  11 = Meta_zero       
 	altgr	control	alt	shiftr	keycode  11 = Meta_Control_bracketright
-	shift	altgr	control	alt	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	control	alt	shiftr	keycode  11 = dead_kdoubleacute
 	shiftl	shiftr	keycode  11 = eacute          
 	shift	shiftl	shiftr	keycode  11 = zero            
 	altgr	shiftl	shiftr	keycode  11 = braceright      
-	shift	altgr	shiftl	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	shiftl	shiftr	keycode  11 = dead_kdoubleacute
 	control	shiftl	shiftr	keycode  11 = eacute          
 	shift	control	shiftl	shiftr	keycode  11 = zero            
 	altgr	control	shiftl	shiftr	keycode  11 = Control_bracketright
-	shift	altgr	control	shiftl	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	control	shiftl	shiftr	keycode  11 = dead_kdoubleacute
 	alt	shiftl	shiftr	keycode  11 = eacute          
 	shift	alt	shiftl	shiftr	keycode  11 = Meta_zero       
 	altgr	alt	shiftl	shiftr	keycode  11 = Meta_braceright 
-	shift	altgr	alt	shiftl	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	alt	shiftl	shiftr	keycode  11 = dead_kdoubleacute
 	control	alt	shiftl	shiftr	keycode  11 = eacute          
 	shift	control	alt	shiftl	shiftr	keycode  11 = Meta_zero       
 	altgr	control	alt	shiftl	shiftr	keycode  11 = Meta_Control_bracketright
-	shift	altgr	control	alt	shiftl	shiftr	keycode  11 = dead_tilde      
+	shift	altgr	control	alt	shiftl	shiftr	keycode  11 = dead_kdoubleacute
 
 plain	keycode  12 = equal           
 	shift	keycode  12 = percent         
@@ -780,67 +780,67 @@ plain	keycode  12 = equal
 	shift	altgr	control	alt	shiftl	shiftr	keycode  12 = dead_diaeresis  
 
 plain	keycode  13 = dead_acute      
-	shift	keycode  13 = dead_circumflex 
+	shift	keycode  13 = dead_kcaron     
 	altgr	keycode  13 = dead_macron     
 	shift	altgr	keycode  13 = dead_cedilla    
 	control	keycode  13 = dead_acute      
-	shift	control	keycode  13 = dead_circumflex 
+	shift	control	keycode  13 = dead_kcaron     
 	altgr	control	keycode  13 = dead_macron     
 	shift	altgr	control	keycode  13 = dead_cedilla    
 	alt	keycode  13 = dead_acute      
-	shift	alt	keycode  13 = dead_circumflex 
+	shift	alt	keycode  13 = dead_kcaron     
 	altgr	alt	keycode  13 = dead_macron     
 	shift	altgr	alt	keycode  13 = dead_cedilla    
 	control	alt	keycode  13 = dead_acute      
-	shift	control	alt	keycode  13 = dead_circumflex 
+	shift	control	alt	keycode  13 = dead_kcaron     
 	altgr	control	alt	keycode  13 = dead_macron     
 	shift	altgr	control	alt	keycode  13 = dead_cedilla    
 	shiftl	keycode  13 = dead_acute      
-	shift	shiftl	keycode  13 = dead_circumflex 
+	shift	shiftl	keycode  13 = dead_kcaron     
 	altgr	shiftl	keycode  13 = dead_macron     
 	shift	altgr	shiftl	keycode  13 = dead_cedilla    
 	control	shiftl	keycode  13 = dead_acute      
-	shift	control	shiftl	keycode  13 = dead_circumflex 
+	shift	control	shiftl	keycode  13 = dead_kcaron     
 	altgr	control	shiftl	keycode  13 = dead_macron     
 	shift	altgr	control	shiftl	keycode  13 = dead_cedilla    
 	alt	shiftl	keycode  13 = dead_acute      
-	shift	alt	shiftl	keycode  13 = dead_circumflex 
+	shift	alt	shiftl	keycode  13 = dead_kcaron     
 	altgr	alt	shiftl	keycode  13 = dead_macron     
 	shift	altgr	alt	shiftl	keycode  13 = dead_cedilla    
 	control	alt	shiftl	keycode  13 = dead_acute      
-	shift	control	alt	shiftl	keycode  13 = dead_circumflex 
+	shift	control	alt	shiftl	keycode  13 = dead_kcaron     
 	altgr	control	alt	shiftl	keycode  13 = dead_macron     
 	shift	altgr	control	alt	shiftl	keycode  13 = dead_cedilla    
 	shiftr	keycode  13 = dead_acute      
-	shift	shiftr	keycode  13 = dead_circumflex 
+	shift	shiftr	keycode  13 = dead_kcaron     
 	altgr	shiftr	keycode  13 = dead_macron     
 	shift	altgr	shiftr	keycode  13 = dead_cedilla    
 	control	shiftr	keycode  13 = dead_acute      
-	shift	control	shiftr	keycode  13 = dead_circumflex 
+	shift	control	shiftr	keycode  13 = dead_kcaron     
 	altgr	control	shiftr	keycode  13 = dead_macron     
 	shift	altgr	control	shiftr	keycode  13 = dead_cedilla    
 	alt	shiftr	keycode  13 = dead_acute      
-	shift	alt	shiftr	keycode  13 = dead_circumflex 
+	shift	alt	shiftr	keycode  13 = dead_kcaron     
 	altgr	alt	shiftr	keycode  13 = dead_macron     
 	shift	altgr	alt	shiftr	keycode  13 = dead_cedilla    
 	control	alt	shiftr	keycode  13 = dead_acute      
-	shift	control	alt	shiftr	keycode  13 = dead_circumflex 
+	shift	control	alt	shiftr	keycode  13 = dead_kcaron     
 	altgr	control	alt	shiftr	keycode  13 = dead_macron     
 	shift	altgr	control	alt	shiftr	keycode  13 = dead_cedilla    
 	shiftl	shiftr	keycode  13 = dead_acute      
-	shift	shiftl	shiftr	keycode  13 = dead_circumflex 
+	shift	shiftl	shiftr	keycode  13 = dead_kcaron     
 	altgr	shiftl	shiftr	keycode  13 = dead_macron     
 	shift	altgr	shiftl	shiftr	keycode  13 = dead_cedilla    
 	control	shiftl	shiftr	keycode  13 = dead_acute      
-	shift	control	shiftl	shiftr	keycode  13 = dead_circumflex 
+	shift	control	shiftl	shiftr	keycode  13 = dead_kcaron     
 	altgr	control	shiftl	shiftr	keycode  13 = dead_macron     
 	shift	altgr	control	shiftl	shiftr	keycode  13 = dead_cedilla    
 	alt	shiftl	shiftr	keycode  13 = dead_acute      
-	shift	alt	shiftl	shiftr	keycode  13 = dead_circumflex 
+	shift	alt	shiftl	shiftr	keycode  13 = dead_kcaron     
 	altgr	alt	shiftl	shiftr	keycode  13 = dead_macron     
 	shift	altgr	alt	shiftl	shiftr	keycode  13 = dead_cedilla    
 	control	alt	shiftl	shiftr	keycode  13 = dead_acute      
-	shift	control	alt	shiftl	shiftr	keycode  13 = dead_circumflex 
+	shift	control	alt	shiftl	shiftr	keycode  13 = dead_kcaron     
 	altgr	control	alt	shiftl	shiftr	keycode  13 = dead_macron     
 	shift	altgr	control	alt	shiftl	shiftr	keycode  13 = dead_cedilla    
 
@@ -2472,67 +2472,67 @@ plain	keycode  38 = +l
 plain	keycode  39 = ugrave          
 	shift	keycode  39 = quotedbl        
 	altgr	keycode  39 = dollar          
-	shift	altgr	keycode  39 = dead_tilde      
+	shift	altgr	keycode  39 = dead_kdoubleacute
 	control	keycode  39 = ugrave          
 	shift	control	keycode  39 = quotedbl        
 	altgr	control	keycode  39 = dollar          
-	shift	altgr	control	keycode  39 = dead_tilde      
+	shift	altgr	control	keycode  39 = dead_kdoubleacute
 	alt	keycode  39 = ugrave          
 	shift	alt	keycode  39 = Meta_quotedbl   
 	altgr	alt	keycode  39 = Meta_dollar     
-	shift	altgr	alt	keycode  39 = dead_tilde      
+	shift	altgr	alt	keycode  39 = dead_kdoubleacute
 	control	alt	keycode  39 = ugrave          
 	shift	control	alt	keycode  39 = Meta_quotedbl   
 	altgr	control	alt	keycode  39 = Meta_dollar     
-	shift	altgr	control	alt	keycode  39 = dead_tilde      
+	shift	altgr	control	alt	keycode  39 = dead_kdoubleacute
 	shiftl	keycode  39 = ugrave          
 	shift	shiftl	keycode  39 = quotedbl        
 	altgr	shiftl	keycode  39 = dollar          
-	shift	altgr	shiftl	keycode  39 = dead_tilde      
+	shift	altgr	shiftl	keycode  39 = dead_kdoubleacute
 	control	shiftl	keycode  39 = ugrave          
 	shift	control	shiftl	keycode  39 = quotedbl        
 	altgr	control	shiftl	keycode  39 = dollar          
-	shift	altgr	control	shiftl	keycode  39 = dead_tilde      
+	shift	altgr	control	shiftl	keycode  39 = dead_kdoubleacute
 	alt	shiftl	keycode  39 = ugrave          
 	shift	alt	shiftl	keycode  39 = Meta_quotedbl   
 	altgr	alt	shiftl	keycode  39 = Meta_dollar     
-	shift	altgr	alt	shiftl	keycode  39 = dead_tilde      
+	shift	altgr	alt	shiftl	keycode  39 = dead_kdoubleacute
 	control	alt	shiftl	keycode  39 = ugrave          
 	shift	control	alt	shiftl	keycode  39 = Meta_quotedbl   
 	altgr	control	alt	shiftl	keycode  39 = Meta_dollar     
-	shift	altgr	control	alt	shiftl	keycode  39 = dead_tilde      
+	shift	altgr	control	alt	shiftl	keycode  39 = dead_kdoubleacute
 	shiftr	keycode  39 = ugrave          
 	shift	shiftr	keycode  39 = quotedbl        
 	altgr	shiftr	keycode  39 = dollar          
-	shift	altgr	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	shiftr	keycode  39 = dead_kdoubleacute
 	control	shiftr	keycode  39 = ugrave          
 	shift	control	shiftr	keycode  39 = quotedbl        
 	altgr	control	shiftr	keycode  39 = dollar          
-	shift	altgr	control	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	control	shiftr	keycode  39 = dead_kdoubleacute
 	alt	shiftr	keycode  39 = ugrave          
 	shift	alt	shiftr	keycode  39 = Meta_quotedbl   
 	altgr	alt	shiftr	keycode  39 = Meta_dollar     
-	shift	altgr	alt	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	alt	shiftr	keycode  39 = dead_kdoubleacute
 	control	alt	shiftr	keycode  39 = ugrave          
 	shift	control	alt	shiftr	keycode  39 = Meta_quotedbl   
 	altgr	control	alt	shiftr	keycode  39 = Meta_dollar     
-	shift	altgr	control	alt	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	control	alt	shiftr	keycode  39 = dead_kdoubleacute
 	shiftl	shiftr	keycode  39 = ugrave          
 	shift	shiftl	shiftr	keycode  39 = quotedbl        
 	altgr	shiftl	shiftr	keycode  39 = dollar          
-	shift	altgr	shiftl	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	shiftl	shiftr	keycode  39 = dead_kdoubleacute
 	control	shiftl	shiftr	keycode  39 = ugrave          
 	shift	control	shiftl	shiftr	keycode  39 = quotedbl        
 	altgr	control	shiftl	shiftr	keycode  39 = dollar          
-	shift	altgr	control	shiftl	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	control	shiftl	shiftr	keycode  39 = dead_kdoubleacute
 	alt	shiftl	shiftr	keycode  39 = ugrave          
 	shift	alt	shiftl	shiftr	keycode  39 = Meta_quotedbl   
 	altgr	alt	shiftl	shiftr	keycode  39 = Meta_dollar     
-	shift	altgr	alt	shiftl	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	alt	shiftl	shiftr	keycode  39 = dead_kdoubleacute
 	control	alt	shiftl	shiftr	keycode  39 = ugrave          
 	shift	control	alt	shiftl	shiftr	keycode  39 = Meta_quotedbl   
 	altgr	control	alt	shiftl	shiftr	keycode  39 = Meta_dollar     
-	shift	altgr	control	alt	shiftl	shiftr	keycode  39 = dead_tilde      
+	shift	altgr	control	alt	shiftl	shiftr	keycode  39 = dead_kdoubleacute
 
 plain	keycode  40 = section         
 	shift	keycode  40 = exclam          
@@ -7755,6 +7755,7 @@ compose '"' 'o' to odiaeresis
 compose '"' 'u' to udiaeresis
 compose '"' 'y' to ydiaeresis
 compose '*' 'a' to aring
+compose 'c' 'c' to periodcentered
 compose ',' 'c' to ccedilla
 compose '`' 'A' to Agrave
 compose '`' 'E' to Egrave
@@ -7775,6 +7776,7 @@ compose '^' 'U' to Ucircumflex
 compose '~' 'A' to Atilde
 compose '~' 'N' to Ntilde
 compose '~' 'O' to Otilde
+compose 'U' 'U' to cent
 compose '"' 'A' to Adiaeresis
 compose '"' 'E' to Ediaeresis
 compose '"' 'I' to Idiaeresis
@@ -7807,9 +7809,9 @@ compose '_' 'e' to emacron
 compose '_' 'i' to imacron
 compose '_' 'o' to omacron
 compose '_' 'u' to umacron
-compose '~' 'a' to abreve
-compose '~' 'g' to gbreve
-compose '~' 'u' to ubreve
+compose 'U' 'a' to abreve
+compose 'U' 'g' to gbreve
+compose 'U' 'u' to ubreve
 compose '.' 'c' to cabovedot
 compose '.' 'e' to eabovedot
 compose '.' 'g' to gabovedot
@@ -7817,21 +7819,21 @@ compose '.' 'i' to idotless
 compose '.' 'l' to U+0140
 compose '.' 'z' to zabovedot
 compose '*' 'u' to uring
-compose '~' 'o' to odoubleacute
-compose '~' 'u' to udoubleacute
-compose '^' 'c' to ccaron
-compose '^' 'd' to dcaron
-compose '^' 'e' to ecaron
-compose '^' 'l' to lcaron
-compose '^' 'n' to ncaron
-compose '^' 'r' to rcaron
-compose '^' 's' to scaron
-compose '^' 't' to tcaron
-compose '^' 'z' to zcaron
+compose '=' 'o' to odoubleacute
+compose '=' 'u' to udoubleacute
+compose 'c' 'c' to ccaron
+compose 'c' 'd' to dcaron
+compose 'c' 'e' to ecaron
+compose 'c' 'l' to lcaron
+compose 'c' 'n' to ncaron
+compose 'c' 'r' to rcaron
+compose 'c' 's' to scaron
+compose 'c' 't' to tcaron
+compose 'c' 'z' to zcaron
 compose ',' 's' to scedilla
 compose ',' 't' to tcedilla
-compose ',' 'a' to aogonek
-compose ',' 'e' to eogonek
+compose 'k' 'a' to aogonek
+compose 'k' 'e' to eogonek
 compose '\'' 'C' to Cacute
 compose '\'' 'L' to Lacute
 compose '\'' 'N' to Nacute
@@ -7852,9 +7854,9 @@ compose '_' 'E' to Emacron
 compose '_' 'I' to Imacron
 compose '_' 'O' to Omacron
 compose '_' 'U' to Umacron
-compose '~' 'A' to Abreve
-compose '~' 'G' to Gbreve
-compose '~' 'U' to Ubreve
+compose 'U' 'A' to Abreve
+compose 'U' 'G' to Gbreve
+compose 'U' 'U' to Ubreve
 compose '.' 'C' to Cabovedot
 compose '.' 'E' to Eabovedot
 compose '.' 'G' to Gabovedot
@@ -7863,43 +7865,44 @@ compose '.' 'L' to U+013f
 compose '.' 'Z' to Zabovedot
 compose '"' 'Y' to Ydiaeresis
 compose '*' 'U' to Uring
-compose '~' 'O' to Odoubleacute
-compose '~' 'U' to Udoubleacute
-compose '^' 'C' to Ccaron
-compose '^' 'D' to Dcaron
-compose '^' 'E' to Ecaron
-compose '^' 'L' to Lcaron
-compose '^' 'N' to Ncaron
-compose '^' 'R' to Rcaron
-compose '^' 'S' to Scaron
-compose '^' 'T' to Tcaron
-compose '^' 'Z' to Zcaron
+compose '=' 'O' to Odoubleacute
+compose '=' 'U' to Udoubleacute
+compose 'c' 'C' to Ccaron
+compose 'c' 'D' to Dcaron
+compose 'c' 'E' to Ecaron
+compose 'c' 'L' to Lcaron
+compose 'c' 'N' to Ncaron
+compose 'c' 'R' to Rcaron
+compose 'c' 'S' to Scaron
+compose 'c' 'T' to Tcaron
+compose 'c' 'Z' to Zcaron
 compose ',' 'S' to Scedilla
 compose ',' 'T' to Tcedilla
-compose ',' 'A' to Aogonek
-compose ',' 'E' to Eogonek
+compose 'k' 'A' to Aogonek
+compose 'k' 'E' to Eogonek
 compose ',' 'e' to U+0229
 compose ',' 'E' to U+0228
-compose '~' 'e' to U+0115
-compose '~' 'i' to U+012d
-compose '~' 'o' to U+014f
+compose 'k' 'k' to twosuperior
+compose 'U' 'e' to U+0115
+compose 'U' 'i' to U+012d
+compose 'U' 'o' to U+014f
 compose ',' 'g' to gcedilla
 compose ',' 'k' to kcedilla
 compose ',' 'l' to lcedilla
 compose ',' 'n' to ncedilla
 compose ',' 'r' to rcedilla
-compose ',' 'i' to iogonek
-compose ',' 'u' to uogonek
-compose '~' 'E' to U+0114
-compose '~' 'I' to U+012c
-compose '~' 'O' to U+014e
+compose 'k' 'i' to iogonek
+compose 'k' 'u' to uogonek
+compose 'U' 'E' to U+0114
+compose 'U' 'I' to U+012c
+compose 'U' 'O' to U+014e
 compose ',' 'G' to Gcedilla
 compose ',' 'K' to Kcedilla
 compose ',' 'L' to Lcedilla
 compose ',' 'N' to Ncedilla
 compose ',' 'R' to Rcedilla
-compose ',' 'I' to Iogonek
-compose ',' 'U' to Uogonek
+compose 'k' 'I' to Iogonek
+compose 'k' 'U' to Uogonek
 compose '`' 'n' to U+01f9
 compose '`' 'v' to U+01dc
 compose '`' 'w' to U+1e81
@@ -7939,18 +7942,18 @@ compose '"' 'w' to U+1e85
 compose '"' 'x' to U+1e8d
 compose '*' 'w' to U+1e98
 compose '*' 'y' to U+1e99
-compose '^' 'a' to U+01ce
-compose '^' 'g' to gcaron
-compose '^' 'h' to hcaron
-compose '^' 'i' to U+01d0
-compose '^' 'j' to U+01f0
-compose '^' 'k' to kcaron
-compose '^' 'o' to U+01d2
-compose '^' 'u' to U+01d4
-compose '^' 'v' to U+01da
+compose 'c' 'a' to U+01ce
+compose 'c' 'g' to gcaron
+compose 'c' 'h' to hcaron
+compose 'c' 'i' to U+01d0
+compose 'c' 'j' to U+01f0
+compose 'c' 'k' to kcaron
+compose 'c' 'o' to U+01d2
+compose 'c' 'u' to U+01d4
+compose 'c' 'v' to U+01da
 compose ',' 'd' to U+1e11
 compose ',' 'h' to U+1e29
-compose ',' 'o' to U+01eb
+compose 'k' 'o' to U+01eb
 compose '+' 'o' to U+01a1
 compose '+' 'u' to U+01b0
 compose '`' 'N' to U+01f8
@@ -7987,6 +7990,3 @@ compose '.' 'X' to U+1e8a
 compose '.' 'Y' to U+1e8e
 compose '"' 'H' to U+1e26
 compose '"' 'W' to U+1e84
-compose '"' 'X' to U+1e8c
-compose '^' 'A' to U+01cd
-compose '^' 'G' to Gcaron

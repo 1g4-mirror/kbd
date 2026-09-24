@@ -1692,67 +1692,67 @@ plain	keycode  26 = bracketleft
 plain	keycode  27 = bracketright    
 	shift	keycode  27 = braceright      
 	altgr	keycode  27 = dead_iota       
-	shift	altgr	keycode  27 = dead_tilde      
+	shift	altgr	keycode  27 = dead_kbreve     
 	control	keycode  27 = Control_bracketright
 	shift	control	keycode  27 = Control_bracketright
 	altgr	control	keycode  27 = dead_iota       
-	shift	altgr	control	keycode  27 = dead_tilde      
+	shift	altgr	control	keycode  27 = dead_kbreve     
 	alt	keycode  27 = Meta_bracketright
 	shift	alt	keycode  27 = Meta_braceright 
 	altgr	alt	keycode  27 = dead_iota       
-	shift	altgr	alt	keycode  27 = dead_tilde      
+	shift	altgr	alt	keycode  27 = dead_kbreve     
 	control	alt	keycode  27 = Meta_Control_bracketright
 	shift	control	alt	keycode  27 = Meta_Control_bracketright
 	altgr	control	alt	keycode  27 = dead_iota       
-	shift	altgr	control	alt	keycode  27 = dead_tilde      
+	shift	altgr	control	alt	keycode  27 = dead_kbreve     
 	shiftl	keycode  27 = bracketright    
 	shift	shiftl	keycode  27 = braceright      
 	altgr	shiftl	keycode  27 = dead_iota       
-	shift	altgr	shiftl	keycode  27 = dead_tilde      
+	shift	altgr	shiftl	keycode  27 = dead_kbreve     
 	control	shiftl	keycode  27 = Control_bracketright
 	shift	control	shiftl	keycode  27 = Control_bracketright
 	altgr	control	shiftl	keycode  27 = dead_iota       
-	shift	altgr	control	shiftl	keycode  27 = dead_tilde      
+	shift	altgr	control	shiftl	keycode  27 = dead_kbreve     
 	alt	shiftl	keycode  27 = Meta_bracketright
 	shift	alt	shiftl	keycode  27 = Meta_braceright 
 	altgr	alt	shiftl	keycode  27 = dead_iota       
-	shift	altgr	alt	shiftl	keycode  27 = dead_tilde      
+	shift	altgr	alt	shiftl	keycode  27 = dead_kbreve     
 	control	alt	shiftl	keycode  27 = Meta_Control_bracketright
 	shift	control	alt	shiftl	keycode  27 = Meta_Control_bracketright
 	altgr	control	alt	shiftl	keycode  27 = dead_iota       
-	shift	altgr	control	alt	shiftl	keycode  27 = dead_tilde      
+	shift	altgr	control	alt	shiftl	keycode  27 = dead_kbreve     
 	shiftr	keycode  27 = bracketright    
 	shift	shiftr	keycode  27 = braceright      
 	altgr	shiftr	keycode  27 = dead_iota       
-	shift	altgr	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	shiftr	keycode  27 = dead_kbreve     
 	control	shiftr	keycode  27 = Control_bracketright
 	shift	control	shiftr	keycode  27 = Control_bracketright
 	altgr	control	shiftr	keycode  27 = dead_iota       
-	shift	altgr	control	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	control	shiftr	keycode  27 = dead_kbreve     
 	alt	shiftr	keycode  27 = Meta_bracketright
 	shift	alt	shiftr	keycode  27 = Meta_braceright 
 	altgr	alt	shiftr	keycode  27 = dead_iota       
-	shift	altgr	alt	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	alt	shiftr	keycode  27 = dead_kbreve     
 	control	alt	shiftr	keycode  27 = Meta_Control_bracketright
 	shift	control	alt	shiftr	keycode  27 = Meta_Control_bracketright
 	altgr	control	alt	shiftr	keycode  27 = dead_iota       
-	shift	altgr	control	alt	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	control	alt	shiftr	keycode  27 = dead_kbreve     
 	shiftl	shiftr	keycode  27 = bracketright    
 	shift	shiftl	shiftr	keycode  27 = braceright      
 	altgr	shiftl	shiftr	keycode  27 = dead_iota       
-	shift	altgr	shiftl	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	shiftl	shiftr	keycode  27 = dead_kbreve     
 	control	shiftl	shiftr	keycode  27 = Control_bracketright
 	shift	control	shiftl	shiftr	keycode  27 = Control_bracketright
 	altgr	control	shiftl	shiftr	keycode  27 = dead_iota       
-	shift	altgr	control	shiftl	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	control	shiftl	shiftr	keycode  27 = dead_kbreve     
 	alt	shiftl	shiftr	keycode  27 = Meta_bracketright
 	shift	alt	shiftl	shiftr	keycode  27 = Meta_braceright 
 	altgr	alt	shiftl	shiftr	keycode  27 = dead_iota       
-	shift	altgr	alt	shiftl	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	alt	shiftl	shiftr	keycode  27 = dead_kbreve     
 	control	alt	shiftl	shiftr	keycode  27 = Meta_Control_bracketright
 	shift	control	alt	shiftl	shiftr	keycode  27 = Meta_Control_bracketright
 	altgr	control	alt	shiftl	shiftr	keycode  27 = dead_iota       
-	shift	altgr	control	alt	shiftl	shiftr	keycode  27 = dead_tilde      
+	shift	altgr	control	alt	shiftl	shiftr	keycode  27 = dead_kbreve     
 
 plain	keycode  28 = Return          
 	shift	keycode  28 = Return          
@@ -7734,15 +7734,15 @@ plain	keycode 210 = Control_backslash
 	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 	shift	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 
+compose 'U' 'U' to cent
 compose 'i' 'i' to greek_ypogegrammeni
 compose '\'' '\'' to acute
 compose '_' '_' to macron
-compose '~' '~' to cent
 compose '"' '"' to diaeresis
 compose '`' '`' to grave
 compose '~' '~' to asciitilde
 compose '_' ' ' to macron
-compose '~' ' ' to cent
+compose 'U' ' ' to cent
 compose '`' '‘' to U+1fba
 compose '`' '•' to U+1fc8
 compose '`' '—' to U+1fca
@@ -7785,12 +7785,12 @@ compose '_' '¥' to U+1fe9
 compose '_' '±' to U+1fb1
 compose '_' '¹' to U+1fd1
 compose '_' 'Å' to U+1fe1
-compose '~' '‘' to U+1fb8
-compose '~' '™' to U+1fd8
-compose '~' '¥' to U+1fe8
-compose '~' '±' to U+1fb0
-compose '~' '¹' to U+1fd0
-compose '~' 'Å' to U+1fe0
+compose 'U' '‘' to U+1fb8
+compose 'U' '™' to U+1fd8
+compose 'U' '¥' to U+1fe8
+compose 'U' '±' to U+1fb0
+compose 'U' '¹' to U+1fd0
+compose 'U' 'Å' to U+1fe0
 compose '"' '\'' to U+0344
 compose '"' '™' to Iotadiaeresis
 compose '"' '¥' to Upsilondiaeresis
