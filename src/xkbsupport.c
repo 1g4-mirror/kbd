@@ -840,6 +840,10 @@ static int xkeymap_is_preferred_console_dead_rule(const struct compose_candidate
 {
 	uint32_t base_unicode = xkeymap_compose_code_to_unicode(candidate->diacr.base);
 
+	/* A dead key encoded as an ASCII accent is not a base letter. */
+	if (xkeymap_is_dead_keysym(candidate->seq[1]))
+		return 0;
+
 	/*
 	 * Prefer the compact Latin dead-key repertoire used by existing
 	 * console keymaps and console-setup dkey tables.  This keeps the
@@ -882,6 +886,9 @@ static unsigned int xkeymap_score_compose_candidate(const struct compose_candida
 	uint32_t base_unicode = xkeymap_compose_code_to_unicode(candidate->diacr.base);
 	uint32_t result_unicode = xkeymap_compose_result_unicode(candidate);
 	unsigned int score = 0;
+
+	if (xkeymap_is_dead_keysym(candidate->seq[1]))
+		base_unicode = 0;
 
 	/*
 	 * Prefer classic dead-key style sequences first: these are the rules
@@ -984,11 +991,8 @@ static int compare_kernel_compose_rules(const void *pa, const void *pb)
 	if (ret != 0)
 		return ret;
 
-	ret = compare_compose_order(lhs->base, rhs->base);
-	if (ret != 0)
-		return ret;
-
-	return compare_compose_order(lhs->result, rhs->result);
+	/* The kernel looks up the input pair and uses the first result. */
+	return compare_compose_order(lhs->base, rhs->base);
 }
 
 static size_t xkeymap_select_compose_candidates(struct compose_candidate *candidates,
@@ -1164,6 +1168,12 @@ static int xkeymap_append_compose_candidates(struct xkeymap *xkeymap,
 	void *seen_rules = NULL;
 	size_t appended = 0, total_rules = 0;
 	int ret = 0;
+	int direction = TO_8BIT;
+
+#ifdef KDSKBDIACRUC
+	if (lk_get_parser_flags(xkeymap->ctx) & LK_FLAG_PREFER_UNICODE)
+		direction = TO_UNICODE;
+#endif
 
 	for (size_t i = 0; i < count; i++) {
 		struct lk_kbdiacr diacr;
@@ -1175,6 +1185,9 @@ static int xkeymap_append_compose_candidates(struct xkeymap *xkeymap,
 		}
 
 		*rule = candidates[i].diacr;
+		/* Compare inputs in the same encoding lk_append_compose() stores. */
+		rule->diacr = (unsigned int) lk_convert_code(xkeymap->ctx, (int) rule->diacr, direction);
+		rule->base = (unsigned int) lk_convert_code(xkeymap->ctx, (int) rule->base, direction);
 		val = tsearch(rule, &seen_rules, compare_kernel_compose_rules);
 		if (!val) {
 			free(rule);

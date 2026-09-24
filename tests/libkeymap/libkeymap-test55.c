@@ -65,7 +65,7 @@ test_sequence_dedup_keeps_best_candidate(void)
 }
 
 static void
-test_kernel_rule_dedup_happens_after_selection(void)
+test_kernel_rule_dedup_happens_after_selection(int unicode)
 {
 	struct parsed_keymap keymap;
 	struct xkeymap xkeymap = { 0 };
@@ -73,13 +73,13 @@ test_kernel_rule_dedup_happens_after_selection(void)
 		{
 			.seq = { 10, 20 },
 			.result_sym = 30,
-			.diacr = { .diacr = 1, .base = 2, .result = 3 },
+			.diacr = { .diacr = 'a', .base = 'b', .result = 3 },
 			.score = 30,
 		},
 		{
 			.seq = { 11, 21 },
 			.result_sym = 31,
-			.diacr = { .diacr = 1, .base = 2, .result = 3 },
+			.diacr = { .diacr = 0xf061, .base = 0xf062, .result = 7 },
 			.score = 25,
 		},
 		{
@@ -92,6 +92,8 @@ test_kernel_rule_dedup_happens_after_selection(void)
 	size_t total_rules = 0;
 
 	init_test_keymap(&keymap, "xkb-compose-selection");
+	if (unicode && lk_set_parser_flags(keymap.ctx, LK_FLAG_PREFER_UNICODE) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to enable Unicode conversion");
 	xkeymap.ctx = keymap.ctx;
 
 	if (xkeymap_append_compose_candidates(&xkeymap, candidates, 3, &total_rules) != 0)
@@ -100,7 +102,7 @@ test_kernel_rule_dedup_happens_after_selection(void)
 	if (total_rules != 2)
 		kbd_error(EXIT_FAILURE, 0, "Expected 2 unique kernel compose rules, got %zu", total_rules);
 
-	expect_rule(keymap.ctx, 0, 1, 2, 3);
+	expect_rule(keymap.ctx, 0, 'a', 'b', 3);
 	expect_rule(keymap.ctx, 1, 4, 5, 6);
 
 	if (lk_diacr_exists(keymap.ctx, 2))
@@ -233,6 +235,7 @@ test_distinct_dead_key_actions(void)
 		{ XKB_KEY_dead_caron,       K_DCARON,   'c', 'c', 0x010d },
 		{ XKB_KEY_dead_tilde,       K_DTILDE,   '~', 'a', 0x00e3 },
 		{ XKB_KEY_dead_breve,       K_DBREVE,   'U', 'a', 0x0103 },
+		{ XKB_KEY_dead_breve,       K_DBREVE,   'U', 'U', 0x016c },
 		{ XKB_KEY_dead_doubleacute, K_DDBACUTE, '=', 'o', 0x0151 },
 		{ XKB_KEY_dead_cedilla,     K_DCEDIL,   ',', 'c', 0x00e7 },
 		{ XKB_KEY_dead_ogonek,      K_DOGONEK,  'k', 'a', 0x0105 },
@@ -240,8 +243,11 @@ test_distinct_dead_key_actions(void)
 	static const char compose[] =
 		"<dead_circumflex> <c> : U0109\n"
 		"<dead_caron> <c> : U010D\n"
+		"<dead_caron> <dead_caron> : U02C7\n"
 		"<dead_tilde> <a> : U00E3\n"
 		"<dead_breve> <a> : U0103\n"
+		"<dead_breve> <U> : U016C\n"
+		"<dead_breve> <dead_breve> : U02D8\n"
 		"<dead_doubleacute> <o> : U0151\n"
 		"<dead_cedilla> <c> : U00E7\n"
 		"<dead_ogonek> <a> : U0105\n";
@@ -306,7 +312,8 @@ int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
 	test_sequence_dedup_keeps_best_candidate();
-	test_kernel_rule_dedup_happens_after_selection();
+	test_kernel_rule_dedup_happens_after_selection(0);
+	test_kernel_rule_dedup_happens_after_selection(1);
 	test_compose_append_uses_kbd_conversion_rules();
 	test_console_dead_rule_policy_prefers_historic_letter_sets();
 	test_dead_key_compose_inputs(0);

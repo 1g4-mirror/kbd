@@ -7734,13 +7734,13 @@ plain	keycode 210 = Control_backslash
 	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 	shift	altgr	control	alt	shiftl	shiftr	keycode 210 = Meta_Control_backslash
 
-compose 'U' 'U' to cent
-compose 'i' 'i' to greek_ypogegrammeni
 compose '\'' '\'' to acute
 compose '_' '_' to macron
+compose 'U' 'U' to cent
 compose '"' '"' to diaeresis
 compose '`' '`' to grave
 compose '~' '~' to asciitilde
+compose 'i' 'i' to greek_ypogegrammeni
 compose '_' ' ' to macron
 compose 'U' ' ' to cent
 compose '`' '‘' to U+1fba

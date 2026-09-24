@@ -7748,7 +7748,6 @@ compose '^' 'u' to ucircumflex
 compose '~' 'a' to atilde
 compose '~' 'o' to otilde
 compose '"' 'y' to ydiaeresis
-compose 'c' 'c' to periodcentered
 compose '`' 'A' to Agrave
 compose '`' 'E' to Egrave
 compose '`' 'I' to Igrave
@@ -7762,7 +7761,6 @@ compose '^' 'O' to Ocircumflex
 compose '^' 'U' to Ucircumflex
 compose '~' 'A' to Atilde
 compose '~' 'O' to Otilde
-compose 'U' 'U' to cent
 compose '\'' 'a' to aacute
 compose '\'' 'c' to cacute
 compose '\'' 'e' to eacute
@@ -7882,7 +7880,6 @@ compose 'k' 'A' to Aogonek
 compose 'k' 'E' to Eogonek
 compose ',' 'e' to U+0229
 compose ',' 'E' to U+0228
-compose 'k' 'k' to twosuperior
 compose '-' 'd' to eth
 compose '-' 'D' to ETH
 compose 'U' 'e' to U+0115
@@ -7990,3 +7987,6 @@ compose '?' 'd' to U+0257
 compose '?' 'e' to U+1ebb
 compose '?' 'f' to U+0192
 compose '?' 'g' to U+0260
+compose '?' 'h' to U+0266
+compose '?' 'i' to U+1ec9
+compose '?' 'k' to U+0199

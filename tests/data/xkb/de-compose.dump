@@ -7754,7 +7754,6 @@ compose '"' 'e' to ediaeresis
 compose '"' 'i' to idiaeresis
 compose '"' 'y' to ydiaeresis
 compose '*' 'a' to aring
-compose 'c' 'c' to periodcentered
 compose ',' 'c' to ccedilla
 compose '`' 'A' to Agrave
 compose '`' 'E' to Egrave
@@ -7772,7 +7771,6 @@ compose '^' 'E' to Ecircumflex
 compose '^' 'I' to Icircumflex
 compose '^' 'O' to Ocircumflex
 compose '^' 'U' to Ucircumflex
-compose 'U' 'U' to cent
 compose '"' 'E' to Ediaeresis
 compose '"' 'I' to Idiaeresis
 compose '*' 'A' to Aring
@@ -7862,7 +7860,6 @@ compose 'k' 'A' to Aogonek
 compose 'k' 'E' to Eogonek
 compose ',' 'e' to U+0229
 compose ',' 'E' to U+0228
-compose 'k' 'k' to twosuperior
 compose 'U' 'e' to U+0115
 compose 'U' 'i' to U+012d
 compose 'U' 'o' to U+014f
@@ -7990,3 +7987,6 @@ compose 'k' 'O' to U+01ea
 compose '!' 'A' to U+1ea0
 compose '!' 'B' to U+1e04
 compose '!' 'D' to U+1e0c
+compose '!' 'E' to U+1eb8
+compose '!' 'H' to U+1e24
+compose '!' 'I' to U+1eca
