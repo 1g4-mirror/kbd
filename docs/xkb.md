@@ -82,3 +82,6 @@ Linux virtual console.
 
 See also [`loadkeys(1)`](https://kbd-project.org/manpages/man1/loadkeys.1.html)
 and [`keymaps(5)`](https://kbd-project.org/manpages/man5/keymaps.5.html).
+
+See [XKB compose conversion](xkb-compose.md) for compose filtering,
+priorities, conflict resolution, and kernel table limits.
