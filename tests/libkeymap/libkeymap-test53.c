@@ -84,9 +84,76 @@ expect_round_trip_file(const char *path)
 	free_test_keymap(&first);
 }
 
+static void
+expect_compose_input_round_trip(int unicode)
+{
+	static const struct lk_kbdiacr rules[] = {
+		{ .diacr = '\'',   .base = '\\',   .result = 'x'    },
+		{ .diacr = 0x7f,   .base = 0x80,   .result = 'x'    },
+		{ .diacr = 0xe9,   .base = 0xff,   .result = 'x'    },
+		{ .diacr = '\'',   .base = 0x03b1, .result = 0x03ac },
+		{ .diacr = 0x0301, .base = 0x03b1, .result = 0x03ac },
+	};
+	struct parsed_keymap first, second;
+	size_t count = unicode ? 5 : 3;
+	char *buf = NULL;
+	size_t size = 0;
+	FILE *fp;
+
+	init_test_keymap(&first, "compose-inputs.map");
+	init_test_keymap(&second, "compose-inputs-dump.map");
+	if (unicode) {
+		if (lk_set_parser_flags(first.ctx, LK_FLAG_PREFER_UNICODE) != 0 ||
+		    lk_set_parser_flags(second.ctx, LK_FLAG_PREFER_UNICODE) != 0)
+			kbd_error(EXIT_FAILURE, 0, "Unable to enable Unicode conversion");
+	}
+	for (size_t i = 0; i < count; i++) {
+		struct lk_kbdiacr rule = rules[i];
+
+		if (lk_append_diacr(first.ctx, &rule) != 0)
+			kbd_error(EXIT_FAILURE, 0, "Unable to append compose rule");
+	}
+	fp = open_memstream(&buf, &size);
+	if (!fp)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create memory stream");
+	/* Non-ASCII Unicode inputs must not depend on this byte encoding. */
+	fprintf(fp, "charset \"iso-8859-2\"\n");
+	lk_dump_diacs(first.ctx, fp);
+	fclose(fp);
+
+	if (unicode) {
+		if (!strstr(buf, "compose U+00e9 U+00ff to ") ||
+		    !strstr(buf, "compose U+0301 U+03b1 to ") ||
+		    !strstr(buf, "compose '\\177' U+0080 to "))
+			kbd_error(EXIT_FAILURE, 0, "Missing Unicode compose input notation");
+	} else if (!strstr(buf, "compose '\351' '\377' to ") ||
+		   !strstr(buf, "compose '\\177' '\200' to ")) {
+		kbd_error(EXIT_FAILURE, 0, "Changed 8-bit compose input notation");
+	}
+	set_test_keymap_string(&second, buf);
+	if (parse_test_keymap_stream(&second, second.file) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to parse compose dump");
+	for (size_t i = 0; i < count; i++) {
+		struct lk_kbdiacr rule;
+
+		if (lk_get_diacr(second.ctx, (int) i, &rule) != 0 ||
+		    rule.diacr != rules[i].diacr || rule.base != rules[i].base ||
+		    rule.result != rules[i].result)
+			kbd_error(EXIT_FAILURE, 0, "Compose rule %zu changed during round trip", i);
+	}
+	if (lk_diacr_exists(second.ctx, (int) count))
+		kbd_error(EXIT_FAILURE, 0, "Unexpected extra compose rule");
+	free(buf);
+	free_test_keymap(&second);
+	free_test_keymap(&first);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
+	expect_compose_input_round_trip(0);
+	expect_compose_input_round_trip(1);
+
 	/* Basic canonicalization for plain sequential key bindings. */
 	expect_round_trip_string("keymap0.map",
 				 "keycode 16 = q\nkeycode 17 = w\nkeycode 18 = e\n");

@@ -56,6 +56,15 @@ dumpchar(FILE *fd, unsigned int c, int comma)
 	fprintf(fd, comma ? "', " : "'");
 }
 
+static void
+dump_compose_input(struct lk_ctx *ctx, FILE *fd, unsigned int c)
+{
+	if ((ctx->flags & LK_FLAG_PREFER_UNICODE) && c > 0x7f)
+		fprintf(fd, "U+%04x", c);
+	else
+		dumpchar(fd, c, 0);
+}
+
 int lk_dump_bkeymap(struct lk_ctx *ctx, FILE *fd)
 {
 	int i, j;
@@ -284,9 +293,9 @@ void lk_dump_diacs(struct lk_ctx *ctx, FILE *fd)
 			continue;
 
 		fprintf(fd, "compose ");
-		dumpchar(fd, ptr->diacr, 0);
+		dump_compose_input(ctx, fd, ptr->diacr);
 		fprintf(fd, " ");
-		dumpchar(fd, ptr->base, 0);
+		dump_compose_input(ctx, fd, ptr->base);
 #ifdef KDGKBDIACRUC
 		if (ctx->flags & LK_FLAG_PREFER_UNICODE) {
 			ksym = codetoksym(ctx, (int) U(ptr->result));
