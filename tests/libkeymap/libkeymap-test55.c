@@ -65,6 +65,50 @@ test_sequence_dedup_keeps_best_candidate(void)
 }
 
 static void
+test_negative_compose_scores(void)
+{
+	struct compose_candidate candidates[] = {
+		{
+			.seq = { XKB_KEY_a, XKB_KEY_space },
+			.result_sym = XKB_KEY_ccaron,
+			.diacr = { .diacr = 'a', .base = ' ', .result = 0x010d ^ 0xf000 },
+		},
+		{
+			.seq = { XKB_KEY_b, XKB_KEY_space },
+			.result_sym = XKB_KEY_ccaron,
+			.diacr = { .diacr = 'b', .base = ' ', .result = 0x010d ^ 0xf000 },
+		},
+		{
+			.seq = { XKB_KEY_c, XKB_KEY_space },
+			.result_sym = XKB_KEY_ellipsis,
+			.diacr = { .diacr = 'c', .base = ' ', .result = 0x2026 ^ 0xf000 },
+		},
+		{
+			.seq = { XKB_KEY_a, XKB_KEY_space },
+			.result_sym = XKB_KEY_aacute,
+			.diacr = { .diacr = 'a', .base = ' ', .result = 0x00e1 ^ 0xf000 },
+		},
+		{
+			.seq = { XKB_KEY_dead_acute, XKB_KEY_a },
+			.result_sym = XKB_KEY_aacute,
+			.diacr = { .diacr = '\'', .base = 'a', .result = 0x00e1 ^ 0xf000 },
+		},
+	};
+	size_t selected;
+
+	for (size_t i = 0; i < ARRAY_SIZE(candidates); i++)
+		candidates[i].score = xkeymap_score_compose_candidate(&candidates[i]);
+	selected = xkeymap_select_compose_candidates(candidates, ARRAY_SIZE(candidates));
+	if (selected != 4 ||
+	    candidates[0].seq[0] != XKB_KEY_dead_acute ||
+	    candidates[1].seq[0] != XKB_KEY_a ||
+	    candidates[1].result_sym != XKB_KEY_aacute ||
+	    candidates[2].seq[0] != XKB_KEY_b ||
+	    candidates[3].seq[0] != XKB_KEY_c)
+		kbd_error(EXIT_FAILURE, 0, "Negative compose scores displaced higher-priority rules");
+}
+
+static void
 test_kernel_rule_dedup_happens_after_selection(int unicode)
 {
 	struct parsed_keymap keymap;
@@ -312,6 +356,7 @@ int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
 	test_sequence_dedup_keeps_best_candidate();
+	test_negative_compose_scores();
 	test_kernel_rule_dedup_happens_after_selection(0);
 	test_kernel_rule_dedup_happens_after_selection(1);
 	test_compose_append_uses_kbd_conversion_rules();

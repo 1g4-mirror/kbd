@@ -87,7 +87,7 @@ struct compose_candidate {
 	xkb_keysym_t seq[2];
 	xkb_keysym_t result_sym;
 	int result_reachable;
-	unsigned int score;
+	int score;
 };
 
 /*
@@ -881,11 +881,11 @@ static int xkeymap_is_preferred_console_dead_rule(const struct compose_candidate
 	}
 }
 
-static unsigned int xkeymap_score_compose_candidate(const struct compose_candidate *candidate)
+static int xkeymap_score_compose_candidate(const struct compose_candidate *candidate)
 {
 	uint32_t base_unicode = xkeymap_compose_code_to_unicode(candidate->diacr.base);
 	uint32_t result_unicode = xkeymap_compose_result_unicode(candidate);
-	unsigned int score = 0;
+	int score = 0;
 
 	if (xkeymap_is_dead_keysym(candidate->seq[1]))
 		base_unicode = 0;
@@ -932,13 +932,23 @@ static unsigned int xkeymap_score_compose_candidate(const struct compose_candida
 	return score;
 }
 
+/* Scores can be negative; keysym and character ordering remains unsigned. */
+static int compare_compose_scores(int lhs, int rhs)
+{
+	if (lhs < rhs)
+		return -1;
+	if (lhs > rhs)
+		return 1;
+	return 0;
+}
+
 static int compare_compose_candidates(const void *pa, const void *pb)
 {
 	const struct compose_candidate *lhs = pa;
 	const struct compose_candidate *rhs = pb;
 	int ret;
 
-	ret = compare_compose_order(rhs->score, lhs->score);
+	ret = compare_compose_scores(rhs->score, lhs->score);
 	if (ret != 0)
 		return ret;
 
@@ -967,7 +977,7 @@ static int compare_compose_candidates_by_sequence(const void *pa, const void *pb
 	if (ret != 0)
 		return ret;
 
-	ret = compare_compose_order(rhs->score, lhs->score);
+	ret = compare_compose_scores(rhs->score, lhs->score);
 	if (ret != 0)
 		return ret;
 
