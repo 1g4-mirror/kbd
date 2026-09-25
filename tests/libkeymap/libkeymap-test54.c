@@ -60,6 +60,28 @@ expect_key_code(struct lk_ctx *ctx, int table, int keycode, int expected)
 }
 
 static void
+expect_us_capslock(struct lk_ctx *ctx)
+{
+	/* Match the KT_LETTER table selection in Linux kbd_keycode(). */
+	for (int shift = 0; shift < 2; shift++) {
+		for (int caps = 0; caps < 2; caps++) {
+			int table = shift << KG_SHIFT;
+			int letter = lk_get_key(ctx, table, 30);
+			int digit = lk_get_key(ctx, table, 2);
+
+			if (caps && KTYP(letter) == KT_LETTER)
+				letter = lk_get_key(ctx, table ^ (1 << KG_SHIFT), 30);
+			if (caps && KTYP(digit) == KT_LETTER)
+				digit = lk_get_key(ctx, table ^ (1 << KG_SHIFT), 2);
+			if (KVAL(letter) != ((shift ^ caps) ? 'A' : 'a') ||
+			    digit != (shift ? '!' : '1'))
+				kbd_error(EXIT_FAILURE, 0, "Incorrect US output with Shift=%d CapsLock=%d",
+					  shift, caps);
+		}
+	}
+}
+
+static void
 test_basic_us_layout(void)
 {
 	struct parsed_keymap keymap;
@@ -75,10 +97,11 @@ test_basic_us_layout(void)
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us layout");
 
+	expect_us_capslock(keymap.ctx);
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
-	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 16)) != KT_LATIN)
-		kbd_error(EXIT_FAILURE, 0, "Shifted latin level must not be CapsLock-tagged");
+	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 16)) != KT_LETTER)
+		kbd_error(EXIT_FAILURE, 0, "Shifted letter must be CapsLock-tagged");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 42, "Shift");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 28, "Return");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 57, "space");
@@ -176,10 +199,11 @@ test_group_toggle_layout(void)
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 58, "Caps_Lock");
 	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_SHIFT), 58, "Caps_Lock");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFTL, 58, "ShiftR_Lock");
+	expect_us_capslock(keymap.ctx);
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
-	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 16)) != KT_LATIN)
-		kbd_error(EXIT_FAILURE, 0, "Shifted latin level must not be CapsLock-tagged");
+	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 16)) != KT_LETTER)
+		kbd_error(EXIT_FAILURE, 0, "Shifted letter must be CapsLock-tagged");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 42, "Shift");
 	expect_key_symbol(keymap.ctx, 1 << KG_CTRL, 29, "Control");
 	expect_key_symbol(keymap.ctx, 1 << KG_ALT, 56, "Alt");
@@ -241,10 +265,11 @@ test_prefer_unicode_does_not_change_xkb_lookup(void)
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us,ru layout with prefer-unicode");
 
+	expect_us_capslock(keymap.ctx);
 	expect_key_symbol(keymap.ctx, 0, 30, "a");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 30, "A");
-	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 30)) != KT_LATIN)
-		kbd_error(EXIT_FAILURE, 0, "Prefer-unicode must not change shifted latin binding type");
+	if (KTYP(lk_get_key(keymap.ctx, 1 << KG_SHIFT, 30)) != KT_LETTER)
+		kbd_error(EXIT_FAILURE, 0, "Unicode shifted letter must be CapsLock-tagged");
 
 	free_test_keymap(&keymap);
 }
@@ -266,6 +291,7 @@ test_level5_is_not_collapsed_into_alt(void)
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us level5 test layout");
 
+	expect_us_capslock(keymap.ctx);
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
 

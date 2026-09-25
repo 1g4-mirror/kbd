@@ -687,7 +687,7 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 						code = shift_lock;
 
 					remember_reachable_sym(xkeymap, sym, code);
-					if (!(mods & (1u << KG_SHIFT)) && xkeymap_is_capslockable(sym, code))
+					if (xkeymap_is_capslockable(sym, code))
 						code = lk_add_capslock(xkeymap->ctx, code);
 					code = xkeymap_apply_modifiers(xkeymap, state, key, mods, code);
 				}
