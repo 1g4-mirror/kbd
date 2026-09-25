@@ -2341,68 +2341,68 @@ plain	keycode  36 = +j
 
 plain	keycode  37 = +k              
 	shift	keycode  37 = K               
-	altgr	keycode  37 = onehalf         
-	shift	altgr	keycode  37 = onequarter      
+	altgr	keycode  37 = oe              
+	shift	altgr	keycode  37 = OE              
 	control	keycode  37 = Control_k       
 	shift	control	keycode  37 = Control_k       
-	altgr	control	keycode  37 = onehalf         
-	shift	altgr	control	keycode  37 = onequarter      
+	altgr	control	keycode  37 = oe              
+	shift	altgr	control	keycode  37 = OE              
 	alt	keycode  37 = Meta_k          
 	shift	alt	keycode  37 = Meta_K          
-	altgr	alt	keycode  37 = onehalf         
-	shift	altgr	alt	keycode  37 = onequarter      
+	altgr	alt	keycode  37 = oe              
+	shift	altgr	alt	keycode  37 = OE              
 	control	alt	keycode  37 = Meta_Control_k  
 	shift	control	alt	keycode  37 = Meta_Control_k  
-	altgr	control	alt	keycode  37 = onehalf         
-	shift	altgr	control	alt	keycode  37 = onequarter      
+	altgr	control	alt	keycode  37 = oe              
+	shift	altgr	control	alt	keycode  37 = OE              
 	shiftl	keycode  37 = +k              
 	shift	shiftl	keycode  37 = K               
-	altgr	shiftl	keycode  37 = onehalf         
-	shift	altgr	shiftl	keycode  37 = onequarter      
+	altgr	shiftl	keycode  37 = oe              
+	shift	altgr	shiftl	keycode  37 = OE              
 	control	shiftl	keycode  37 = Control_k       
 	shift	control	shiftl	keycode  37 = Control_k       
-	altgr	control	shiftl	keycode  37 = onehalf         
-	shift	altgr	control	shiftl	keycode  37 = onequarter      
+	altgr	control	shiftl	keycode  37 = oe              
+	shift	altgr	control	shiftl	keycode  37 = OE              
 	alt	shiftl	keycode  37 = Meta_k          
 	shift	alt	shiftl	keycode  37 = Meta_K          
-	altgr	alt	shiftl	keycode  37 = onehalf         
-	shift	altgr	alt	shiftl	keycode  37 = onequarter      
+	altgr	alt	shiftl	keycode  37 = oe              
+	shift	altgr	alt	shiftl	keycode  37 = OE              
 	control	alt	shiftl	keycode  37 = Meta_Control_k  
 	shift	control	alt	shiftl	keycode  37 = Meta_Control_k  
-	altgr	control	alt	shiftl	keycode  37 = onehalf         
-	shift	altgr	control	alt	shiftl	keycode  37 = onequarter      
+	altgr	control	alt	shiftl	keycode  37 = oe              
+	shift	altgr	control	alt	shiftl	keycode  37 = OE              
 	shiftr	keycode  37 = +k              
 	shift	shiftr	keycode  37 = K               
-	altgr	shiftr	keycode  37 = onehalf         
-	shift	altgr	shiftr	keycode  37 = onequarter      
+	altgr	shiftr	keycode  37 = oe              
+	shift	altgr	shiftr	keycode  37 = OE              
 	control	shiftr	keycode  37 = Control_k       
 	shift	control	shiftr	keycode  37 = Control_k       
-	altgr	control	shiftr	keycode  37 = onehalf         
-	shift	altgr	control	shiftr	keycode  37 = onequarter      
+	altgr	control	shiftr	keycode  37 = oe              
+	shift	altgr	control	shiftr	keycode  37 = OE              
 	alt	shiftr	keycode  37 = Meta_k          
 	shift	alt	shiftr	keycode  37 = Meta_K          
-	altgr	alt	shiftr	keycode  37 = onehalf         
-	shift	altgr	alt	shiftr	keycode  37 = onequarter      
+	altgr	alt	shiftr	keycode  37 = oe              
+	shift	altgr	alt	shiftr	keycode  37 = OE              
 	control	alt	shiftr	keycode  37 = Meta_Control_k  
 	shift	control	alt	shiftr	keycode  37 = Meta_Control_k  
-	altgr	control	alt	shiftr	keycode  37 = onehalf         
-	shift	altgr	control	alt	shiftr	keycode  37 = onequarter      
+	altgr	control	alt	shiftr	keycode  37 = oe              
+	shift	altgr	control	alt	shiftr	keycode  37 = OE              
 	shiftl	shiftr	keycode  37 = +k              
 	shift	shiftl	shiftr	keycode  37 = K               
-	altgr	shiftl	shiftr	keycode  37 = onehalf         
-	shift	altgr	shiftl	shiftr	keycode  37 = onequarter      
+	altgr	shiftl	shiftr	keycode  37 = oe              
+	shift	altgr	shiftl	shiftr	keycode  37 = OE              
 	control	shiftl	shiftr	keycode  37 = Control_k       
 	shift	control	shiftl	shiftr	keycode  37 = Control_k       
-	altgr	control	shiftl	shiftr	keycode  37 = onehalf         
-	shift	altgr	control	shiftl	shiftr	keycode  37 = onequarter      
+	altgr	control	shiftl	shiftr	keycode  37 = oe              
+	shift	altgr	control	shiftl	shiftr	keycode  37 = OE              
 	alt	shiftl	shiftr	keycode  37 = Meta_k          
 	shift	alt	shiftl	shiftr	keycode  37 = Meta_K          
-	altgr	alt	shiftl	shiftr	keycode  37 = onehalf         
-	shift	altgr	alt	shiftl	shiftr	keycode  37 = onequarter      
+	altgr	alt	shiftl	shiftr	keycode  37 = oe              
+	shift	altgr	alt	shiftl	shiftr	keycode  37 = OE              
 	control	alt	shiftl	shiftr	keycode  37 = Meta_Control_k  
 	shift	control	alt	shiftl	shiftr	keycode  37 = Meta_Control_k  
-	altgr	control	alt	shiftl	shiftr	keycode  37 = onehalf         
-	shift	altgr	control	alt	shiftl	shiftr	keycode  37 = onequarter      
+	altgr	control	alt	shiftl	shiftr	keycode  37 = oe              
+	shift	altgr	control	alt	shiftl	shiftr	keycode  37 = OE              
 
 plain	keycode  38 = +l              
 	shift	keycode  38 = L               
@@ -7880,8 +7880,6 @@ compose 'k' 'A' to Aogonek
 compose 'k' 'E' to Eogonek
 compose ',' 'e' to U+0229
 compose ',' 'E' to U+0228
-compose '-' 'd' to eth
-compose '-' 'D' to ETH
 compose 'U' 'e' to U+0115
 compose 'U' 'i' to U+012d
 compose 'U' 'o' to U+014f
@@ -7892,6 +7890,7 @@ compose ',' 'n' to ncedilla
 compose ',' 'r' to rcedilla
 compose 'k' 'i' to iogonek
 compose 'k' 'u' to uogonek
+compose '-' 'd' to dstroke
 compose '-' 'h' to hstroke
 compose '-' 'l' to lstroke
 compose '-' 'o' to oslash
@@ -7906,6 +7905,7 @@ compose ',' 'N' to Ncedilla
 compose ',' 'R' to Rcedilla
 compose 'k' 'I' to Iogonek
 compose 'k' 'U' to Uogonek
+compose '-' 'D' to Dstroke
 compose '-' 'H' to Hstroke
 compose '-' 'L' to Lstroke
 compose '-' 'O' to Ooblique

@@ -463,6 +463,20 @@ static int xkeymap_get_code_from_name(struct xkeymap *xkeymap, xkb_keysym_t symb
 	else
 		ret = -1;
 
+	/*
+	 * The 8-bit name lookup may borrow a byte from another charset.
+	 * Keep that representation only if it still denotes the named character
+	 * in the current charset; otherwise retain the Unicode name resolution.
+	 * Kernel actions must keep their symbol type.
+	 */
+	if (ret >= 0x80 && KTYP(ret) == KT_LATIN) {
+		int unicode = lk_ksym_to_code(xkeymap->ctx, symbuf, TO_UNICODE);
+
+		if (unicode >= 0x1000 &&
+		    lk_convert_code(xkeymap->ctx, ret, TO_UNICODE) != (unicode ^ 0xf000))
+			ret = unicode;
+	}
+
 	return xkeymap_validate_code(ret);
 }
 

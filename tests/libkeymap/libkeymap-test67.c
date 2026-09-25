@@ -68,8 +68,8 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert 4-layout XKB stress keymap");
 
 	/* Group 1: US AltGr layout keeps third/fourth level Latin symbols. */
-	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 37, "onehalf");
-	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 37, "onequarter");
+	expect_key_symbol(keymap.ctx, 1 << KG_ALTGR, 37, "oe");
+	expect_key_symbol(keymap.ctx, (1 << KG_ALTGR) | (1 << KG_SHIFT), 37, "OE");
 
 	/* Group 2: Serbian Cyrillic aliases remain reachable on AltGr. */
 	expect_key_symbol(keymap.ctx, (1 << KG_SHIFTL) | (1 << KG_ALTGR), 37,

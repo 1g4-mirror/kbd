@@ -285,16 +285,16 @@ test_distinct_dead_key_actions(void)
 		{ XKB_KEY_dead_ogonek,      K_DOGONEK,  'k', 'a', 0x0105 },
 	};
 	static const char compose[] =
-		"<dead_circumflex> <c> : U0109\n"
-		"<dead_caron> <c> : U010D\n"
+		"<dead_circumflex> <c> : ccircumflex\n"
+		"<dead_caron> <c> : ccaron\n"
 		"<dead_caron> <dead_caron> : U02C7\n"
-		"<dead_tilde> <a> : U00E3\n"
-		"<dead_breve> <a> : U0103\n"
-		"<dead_breve> <U> : U016C\n"
+		"<dead_tilde> <a> : atilde\n"
+		"<dead_breve> <a> : abreve\n"
+		"<dead_breve> <U> : Ubreve\n"
 		"<dead_breve> <dead_breve> : U02D8\n"
-		"<dead_doubleacute> <o> : U0151\n"
-		"<dead_cedilla> <c> : U00E7\n"
-		"<dead_ogonek> <a> : U0105\n";
+		"<dead_doubleacute> <o> : odoubleacute\n"
+		"<dead_cedilla> <c> : ccedilla\n"
+		"<dead_ogonek> <a> : aogonek\n";
 	struct parsed_keymap keymap;
 	struct xkeymap xkeymap = { 0 };
 	unsigned int found = 0;
@@ -352,6 +352,43 @@ test_distinct_dead_key_actions(void)
 	free_test_keymap(&keymap);
 }
 
+static void
+test_named_character_codes(const char *charset)
+{
+	static const struct {
+		xkb_keysym_t sym;
+		unsigned int unicode;
+	} cases[] = {
+		{ XKB_KEY_ccaron, 0x010d },
+		{ XKB_KEY_breve,  0x02d8 },
+		{ XKB_KEY_caron,  0x02c7 },
+		{ XKB_KEY_ogonek, 0x02db },
+		{ XKB_KEY_eacute, 0x00e9 },
+	};
+	struct parsed_keymap keymap;
+	struct xkeymap xkeymap = { 0 };
+
+	init_test_keymap(&keymap, "xkb-named-characters");
+	xkeymap.ctx = keymap.ctx;
+	if (lk_set_charset(keymap.ctx, charset) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to select charset %s", charset);
+	for (size_t i = 0; i < ARRAY_SIZE(cases); i++) {
+		int code = xkeymap_get_code(&xkeymap, cases[i].sym);
+
+		if (code < 0 || lk_convert_code(keymap.ctx, code, TO_UNICODE) != (int) cases[i].unicode)
+			kbd_error(EXIT_FAILURE, 0, "Named XKB character changed meaning in %s", charset);
+	}
+	/* Characters already represented correctly keep their existing type. */
+	if (xkeymap_get_code(&xkeymap, XKB_KEY_eacute) != 0xe9 ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_a) != 'a' ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_BackSpace) != 0x08 ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_dead_acute) != K_DACUTE ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_KP_1) != K_P1 ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_ISO_Left_Tab) != K(KT_META, 9))
+		kbd_error(EXIT_FAILURE, 0, "Named XKB symbol type changed");
+	free_test_keymap(&keymap);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
@@ -364,6 +401,8 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_dead_key_compose_inputs(0);
 	test_dead_key_compose_inputs(1);
 	test_distinct_dead_key_actions();
+	test_named_character_codes("iso-8859-1");
+	test_named_character_codes("iso-8859-2");
 
 	return EXIT_SUCCESS;
 }
