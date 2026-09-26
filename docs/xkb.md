@@ -69,6 +69,44 @@ richer input model than the kernel console keymap interface, so conversion
 necessarily preserves the behavior that can be expressed through the
 Linux virtual console.
 
+## Temporary group switching
+
+`grp:switch` uses RightAlt to select the next group while the key is held.
+For example:
+
+```sh
+loadkeys --xkb-layout us,ru --xkb-options grp:switch
+```
+
+The converter maps `Mode_switch` (also named `ISO_Group_Shift`) to the
+console action `CtrlR`. This uses the independent `KG_CTRLR` bit; ordinary
+left and right Control keys still use `Control` (`KG_CTRL`). The existing
+`KG_SHIFTL` and `KG_SHIFTR` bits continue to select the locked group.
+
+When a keymap contains `Mode_switch`, the converter adds tables 128–191
+alongside tables 0–63. With `KG_CTRLR` set, these tables select the next
+XKB group, wrapping at the total number of groups. Per-key layout fallback
+is still resolved by libxkbcommon. Releasing the switch clears `KG_CTRLR`
+and returns to the group selected by the locked group bits.
+
+The console looks up key releases in the current table, without remembering
+the action used at key press. In the extra tables, every key that can produce
+`Mode_switch` therefore keeps the `CtrlR` action under all modifiers. This
+allows RightAlt to be released after pressing Shift or changing the locked
+group. In the ordinary tables, original assignments are preserved, including
+`Shift+RightAlt = Compose` where XKB defines it. If the locked group changes
+while RightAlt is held, releasing RightAlt returns to that newly selected
+group.
+
+This represents a single held group switch. Multiple `Mode_switch` keys
+share the same bit: holding several does not advance several groups, and
+while one is held, the others also act as group switches rather than their
+alternate bindings. Arbitrary XKB actions attached to `Mode_switch` are not
+interpreted; conversion assumes the usual `SetGroup(group=+1)` behavior.
+
+The existing limitations of other group actions and of releasing an ordinary
+modifier after its binding changes between groups still apply.
+
 ## Scope and limitations
 
 - XKB conversion affects the Linux virtual console keymap only.

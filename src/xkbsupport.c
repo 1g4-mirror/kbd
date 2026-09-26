@@ -362,7 +362,7 @@ static int xkeymap_get_code_from_semantic_keysym(struct xkeymap *xkeymap, xkb_ke
 		{ XKB_KEY_Super_R,		"Alt" },
 		{ XKB_KEY_Hyper_L,		"Alt" },
 		{ XKB_KEY_Hyper_R,		"Alt" },
-		{ XKB_KEY_Mode_switch,		"AltGr" },
+		{ XKB_KEY_Mode_switch,		"CtrlR" },
 		{ XKB_KEY_Multi_key,		"Compose" },
 		{ XKB_KEY_Sys_Req,		"Last_Console" },
 		{ XKB_KEY_Print,		"Control_backslash" },
@@ -375,7 +375,6 @@ static int xkeymap_get_code_from_semantic_keysym(struct xkeymap *xkeymap, xkb_ke
 		{ XKB_KEY_ISO_Level5_Shift,	"AltGr" },
 		{ XKB_KEY_ISO_Level5_Latch,	"AltGr" },
 		{ XKB_KEY_ISO_Level5_Lock,	"AltGr_Lock" },
-		{ XKB_KEY_ISO_Group_Shift,	"ShiftL" },
 		{ XKB_KEY_ISO_Group_Latch,	"ShiftL" },
 		{ XKB_KEY_ISO_Group_Lock,	"ShiftL_Lock" },
 		{ XKB_KEY_ISO_First_Group,	"ShiftL_Lock" },
@@ -608,11 +607,28 @@ static int xkeymap_apply_modifiers(struct xkeymap *xkeymap, struct xkb_state *st
 	return code;
 }
 
+/* Mode_switch and ISO_Group_Shift are aliases for the same keysym. */
+static bool xkeymap_has_group_switch(struct xkb_keymap *keymap, xkb_keycode_t key)
+{
+	for (xkb_layout_index_t layout = 0; layout < xkb_keymap_num_layouts_for_key(keymap, key); layout++) {
+		for (xkb_level_index_t level = 0; level < xkb_keymap_num_levels_for_key(keymap, key, layout); level++) {
+			const xkb_keysym_t *syms;
+
+			if (xkb_keymap_key_get_syms_by_level(keymap, key, layout, level, &syms) > 0 &&
+			    syms[0] == XKB_KEY_Mode_switch)
+				return true;
+		}
+	}
+	return false;
+}
+
 static int xkeymap_walk(struct xkeymap *xkeymap)
 {
 	struct xkb_state *state;
 	lk_keywords keywords = lk_get_keywords(xkeymap->ctx);
 	xkb_mod_mask_t masks[16] = { 0 };
+	bool group_switch[NR_KEYS] = { false };
+	bool has_group_switch = false;
 	xkb_layout_index_t num_layouts = xkb_keymap_num_layouts(xkeymap->keymap);
 	xkb_keycode_t min = xkb_keymap_min_keycode(xkeymap->keymap);
 	xkb_keycode_t max = xkb_keymap_max_keycode(xkeymap->keymap);
@@ -639,6 +655,11 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 	if (max >= NR_KEYS + EVDEV_OFFSET)
 		max = NR_KEYS + EVDEV_OFFSET - 1;
 
+	for (xkb_keycode_t key = min; key <= max; key++) {
+		group_switch[KERN_KEYCODE(key)] = xkeymap_has_group_switch(xkeymap->keymap, key);
+		has_group_switch |= group_switch[KERN_KEYCODE(key)];
+	}
+
 	/* Shift, AltGr, Control and Alt occupy the four low console bits. */
 	for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
 		for (size_t i = 0; i < ARRAY_SIZE(xkeymap_modifier_rules); i++) {
@@ -654,17 +675,33 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 
 	for (xkb_keycode_t key = min; key <= max; key++) {
 		/* Let XKB resolve per-key layout fallback for every console group. */
-		for (unsigned int group = 0; group < NR_LAYOUTS; group++) {
+		for (unsigned int slot = 0; slot < NR_LAYOUTS * (has_group_switch ? 2u : 1u); slot++) {
+			unsigned int group = slot % NR_LAYOUTS;
+			bool held = slot >= NR_LAYOUTS;
+			xkb_layout_index_t selected = (layouts[num_layouts - 1][group] + held) % num_layouts;
+
 			for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
 				xkb_layout_index_t layout;
 				xkb_level_index_t level;
 				xkb_keysym_t sym;
-				int table = layout_switch[group] | (int) mods;
+				int table = layout_switch[group] | (int) mods | (held ? (1 << KG_CTRLR) : 0);
 				int code;
+
+				/*
+				 * The console looks up releases in the current table.
+				 * Keep the switch action while held, even if Shift now
+				 * selects Compose or the new group has another binding.
+				 * KG_CTRLR is separate from the locked group bits.
+				 */
+				if (held && group_switch[KERN_KEYCODE(key)]) {
+					if (lk_add_key(xkeymap->ctx, table, (int) KERN_KEYCODE(key), K_CTRLR) < 0)
+						goto end;
+					continue;
+				}
 
 				/* Level masks omit modifiers ignored by a key's type. */
 				xkb_state_update_mask(state, masks[mods], 0, 0, 0, 0,
-						      layouts[num_layouts - 1][group]);
+						      selected);
 				layout = xkb_state_key_get_layout(state, key);
 				if (layout == XKB_LAYOUT_INVALID)
 					continue;

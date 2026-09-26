@@ -1,4 +1,5 @@
 #include <linux/keyboard.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #include "libkeymap-test.h"
 #include "xkbsupport.h"
@@ -97,6 +98,8 @@ test_basic_us_layout(void)
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
 		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us layout");
 
+	if (lk_map_exists(keymap.ctx, 1 << KG_CTRLR))
+		kbd_error(EXIT_FAILURE, 0, "Unexpected momentary group table without Mode_switch");
 	expect_us_capslock(keymap.ctx);
 	expect_key_symbol(keymap.ctx, 0, 16, "q");
 	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 16, "Q");
@@ -222,6 +225,140 @@ test_group_toggle_layout(void)
 	free_test_keymap(&keymap);
 }
 
+/* The console resolves both press and release using the current table. */
+struct console_state {
+	unsigned int down[NR_SHIFT];
+	unsigned int shift;
+	unsigned int lock;
+};
+
+static int
+console_key(struct lk_ctx *ctx, struct console_state *state, int key, int pressed)
+{
+	int code = lk_get_key(ctx, (int) (state->shift ^ state->lock), key);
+	unsigned int value = KVAL(code);
+
+	if (KTYP(code) == KT_SHIFT) {
+		if (pressed)
+			state->down[value]++;
+		else if (state->down[value])
+			state->down[value]--;
+		if (state->down[value])
+			state->shift |= 1u << value;
+		else
+			state->shift &= ~(1u << value);
+	} else if (KTYP(code) == KT_LOCK && pressed) {
+		state->lock ^= 1u << value;
+	}
+	return code;
+}
+
+static void
+test_momentary_group_switch(const char *layouts, const char *variants, unsigned int count)
+{
+	static const unsigned int initial_groups[4][4] = {
+		{ 0, 0, 0, 0 },
+		{ 0, 1, 1, 0 },
+		{ 0, 1, 2, 0 },
+		{ 0, 1, 3, 2 }
+	};
+	static const int sequences[][4] = {
+		{ 100, 42,  -100, -42  }, /* Release the switch with Shift held. */
+		{ 100, 42,  -42,  -100 }, /* Release Shift before the switch. */
+		{ 42,  100, -42,  -100 }, /* Compose; release Shift first. */
+		{ 42,  100, -100, -42  }, /* Compose; release RightAlt first. */
+		{ 100, 58,  -58,  -100 }, /* Change the locked group while held. */
+	};
+	struct parsed_keymap keymap;
+	struct xkeymap_params params = {
+		.model = "pc105",
+		.layout = layouts,
+		.variant = variants,
+		.options = "grp:switch,grp:caps_toggle",
+	};
+	struct xkb_rule_names names = {
+		.rules = "evdev",
+		.model = params.model,
+		.layout = params.layout,
+		.variant = params.variant,
+		.options = params.options,
+	};
+	struct xkb_context *context;
+	struct xkb_keymap *reference;
+
+	init_test_keymap(&keymap, "xkb-momentary-group");
+	set_xkb_config_root();
+	set_xkb_suppress_warnings();
+	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to convert momentary group switch");
+
+	context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (!context)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+	reference = xkb_keymap_new_from_names(context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	if (!reference)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile reference keymap");
+
+	for (unsigned int group = 0; group < 4; group++) {
+		unsigned int locked = group << KG_SHIFTL;
+
+		for (unsigned int mods = 0; mods < 16; mods++) {
+			expect_key_code(keymap.ctx, (int) (locked | mods | (1 << KG_CTRLR)), 100, K_CTRLR);
+			expect_key_code(keymap.ctx, (int) (locked | mods | (1 << KG_CTRLR)), 97, K_CTRL);
+			expect_key_code(keymap.ctx, (int) (locked | mods | (1 << KG_CTRLR)), 42, K_SHIFT);
+			expect_key_code(keymap.ctx, (int) (locked | mods | (1 << KG_CTRLR)), 28, K_ENTER);
+		}
+		for (unsigned int seq = 0; seq < sizeof(sequences) / sizeof(sequences[0]); seq++) {
+			struct console_state console = { .lock = locked };
+			struct xkb_state *state;
+
+			/*
+			 * Exercise locks while Mode_switch is held. AltGr release
+			 * across groups is a separate limitation, as is the existing
+			 * three-group lock cycle (which is not a next-group cycle).
+			 */
+			if (seq == 4 && (count == 3 ||
+					 lk_get_key(keymap.ctx, (int) locked, 100) != K_CTRLR))
+				continue;
+			state = xkb_state_new(reference);
+			if (!state)
+				kbd_error(EXIT_FAILURE, 0, "Unable to create reference state");
+			xkb_state_update_mask(state, 0, 0, 0, 0, 0, initial_groups[count - 1][group]);
+
+			for (unsigned int step = 0; step < 4; step++) {
+				int event = sequences[seq][step];
+				int key = event < 0 ? -event : event;
+				int action = console_key(keymap.ctx, &console, key, event > 0);
+				int code, expected;
+
+				if (event == 100 &&
+				    xkb_state_key_get_one_sym(state, 100 + 8) == XKB_KEY_Mode_switch &&
+				    action != K_CTRLR)
+					kbd_error(EXIT_FAILURE, 0, "Mode_switch must use CtrlR");
+				if (event == 100 &&
+				    xkb_state_key_get_one_sym(state, 100 + 8) == XKB_KEY_Multi_key &&
+				    action != K_COMPOSE)
+					kbd_error(EXIT_FAILURE, 0, "Shift+RightAlt must remain Compose: %s group %u action %#x", layouts, group, action);
+				xkb_state_update_key(state, (xkb_keycode_t) key + 8, event > 0 ? XKB_KEY_DOWN : XKB_KEY_UP);
+				code = lk_get_key(keymap.ctx, (int) (console.shift ^ console.lock), 30);
+				if (KTYP(code) == KT_LETTER)
+					code = K(KT_LATIN, KVAL(code));
+				expected = (int) xkb_state_key_get_utf32(state, 30 + 8);
+				if (lk_convert_code(keymap.ctx, code, TO_UNICODE) != expected)
+					kbd_error(EXIT_FAILURE, 0,
+						  "Group switch mismatch: %s group %u sequence %u step %u: code %#x expected %#x table %#x",
+						  layouts, group, seq, step, code, expected, console.shift ^ console.lock);
+			}
+			if (console.shift)
+				kbd_error(EXIT_FAILURE, 0, "Modifier remains held: %s group %u sequence %u mask %#x", layouts, group, seq, console.shift);
+			xkb_state_unref(state);
+		}
+	}
+	xkb_keymap_unref(reference);
+	xkb_context_unref(context);
+	free_test_keymap(&keymap);
+}
+
 static void
 test_group_select_layout(void)
 {
@@ -334,6 +471,11 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_german_altgr("pc104");
 	test_german_altgr("pc105");
 	test_group_toggle_layout();
+	test_momentary_group_switch("us", NULL, 1);
+	test_momentary_group_switch("us,ru", NULL, 2);
+	test_momentary_group_switch("us,ru,us", ",,dvorak", 3);
+	test_momentary_group_switch("us,ru,us,ru", ",,dvorak,phonetic", 4);
+	test_momentary_group_switch("us,ru,de,gr", NULL, 4);
 	test_group_select_layout();
 	test_prefer_unicode_does_not_change_xkb_lookup();
 	test_level5_is_not_collapsed_into_alt();
