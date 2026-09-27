@@ -1104,6 +1104,9 @@ static size_t xkeymap_select_compose_candidates(struct compose_candidate *candid
 {
 	size_t out = 0;
 
+	if (count < 2)
+		return count;
+
 	qsort(candidates, count, sizeof(*candidates), compare_compose_candidates_by_sequence);
 
 	for (size_t i = 0; i < count; i++) {
@@ -1228,7 +1231,7 @@ static int xkeymap_collect_compose_candidates(struct xkeymap *xkeymap,
 	struct xkb_compose_table_iterator *iter = xkb_compose_table_iterator_new(xkeymap->compose);
 	struct compose_candidate *candidates = NULL;
 	size_t count = 0, capacity = 0;
-	int ret = -1;
+	int ret = 0;
 
 	if (!iter) {
 		XKEYMAP_WARNING(0, "xkb_compose_table_iterator_new failed");
