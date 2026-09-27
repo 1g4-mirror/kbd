@@ -607,19 +607,45 @@ static int xkeymap_apply_modifiers(struct xkeymap *xkeymap, struct xkb_state *st
 	return code;
 }
 
-/* Mode_switch and ISO_Group_Shift are aliases for the same keysym. */
-static bool xkeymap_has_group_switch(struct xkb_keymap *keymap, xkb_keycode_t key)
+enum xkeymap_group_feature {
+	XKEYMAP_GROUP_SWITCH = 1,
+	XKEYMAP_GROUP_SELECT = 2,
+};
+
+static unsigned int xkeymap_group_features(struct xkb_keymap *keymap, xkb_keycode_t key)
 {
+	unsigned int features = 0;
+
 	for (xkb_layout_index_t layout = 0; layout < xkb_keymap_num_layouts_for_key(keymap, key); layout++) {
 		for (xkb_level_index_t level = 0; level < xkb_keymap_num_levels_for_key(keymap, key, layout); level++) {
 			const xkb_keysym_t *syms;
 
-			if (xkb_keymap_key_get_syms_by_level(keymap, key, layout, level, &syms) > 0 &&
-			    syms[0] == XKB_KEY_Mode_switch)
-				return true;
+			if (xkb_keymap_key_get_syms_by_level(keymap, key, layout, level, &syms) <= 0)
+				continue;
+			/* Mode_switch and ISO_Group_Shift are aliases. */
+			if (syms[0] == XKB_KEY_Mode_switch)
+				features |= XKEYMAP_GROUP_SWITCH;
+			else if (syms[0] == XKB_KEY_ISO_First_Group || syms[0] == XKB_KEY_ISO_Last_Group)
+				features |= XKEYMAP_GROUP_SELECT;
 		}
 	}
-	return false;
+	return features;
+}
+
+static int xkeymap_select_group(unsigned int num_layouts, unsigned int group, unsigned int target)
+{
+	static const int actions[] = { K_HOLE, K_SHIFTLLOCK, K_SHIFTRLOCK, K_CTRLLLOCK };
+
+	/*
+	 * A console lock action toggles only one bit. CtrlL inverts both bits
+	 * in the decoded group index, allowing any target in one action.
+	 * Selecting the current group must not toggle anything.
+	 */
+	for (unsigned int mask = 0; mask < ARRAY_SIZE(actions); mask++) {
+		if (layouts[num_layouts - 1][group ^ mask] == target)
+			return actions[mask];
+	}
+	return K_HOLE;
 }
 
 static int xkeymap_walk(struct xkeymap *xkeymap)
@@ -629,6 +655,8 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 	xkb_mod_mask_t masks[16] = { 0 };
 	bool group_switch[NR_KEYS] = { false };
 	bool has_group_switch = false;
+	unsigned int group_features = 0;
+	unsigned int group_states;
 	xkb_layout_index_t num_layouts = xkb_keymap_num_layouts(xkeymap->keymap);
 	xkb_keycode_t min = xkb_keymap_min_keycode(xkeymap->keymap);
 	xkb_keycode_t max = xkb_keymap_max_keycode(xkeymap->keymap);
@@ -656,9 +684,16 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 		max = NR_KEYS + EVDEV_OFFSET - 1;
 
 	for (xkb_keycode_t key = min; key <= max; key++) {
-		group_switch[KERN_KEYCODE(key)] = xkeymap_has_group_switch(xkeymap->keymap, key);
-		has_group_switch |= group_switch[KERN_KEYCODE(key)];
+		unsigned int features = xkeymap_group_features(xkeymap->keymap, key);
+
+		group_switch[KERN_KEYCODE(key)] = (features & XKEYMAP_GROUP_SWITCH) != 0;
+		group_features |= features;
 	}
+
+	has_group_switch = (group_features & XKEYMAP_GROUP_SWITCH) != 0;
+	group_states = NR_LAYOUTS;
+	if (num_layouts > 2 && (group_features & XKEYMAP_GROUP_SELECT))
+		group_states *= 2;
 
 	/* Shift, AltGr, Control and Alt occupy the four low console bits. */
 	for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
@@ -675,16 +710,19 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 
 	for (xkb_keycode_t key = min; key <= max; key++) {
 		/* Let XKB resolve per-key layout fallback for every console group. */
-		for (unsigned int slot = 0; slot < NR_LAYOUTS * (has_group_switch ? 2u : 1u); slot++) {
-			unsigned int group = slot % NR_LAYOUTS;
-			bool held = slot >= NR_LAYOUTS;
+		for (unsigned int slot = 0; slot < group_states * (has_group_switch ? 2u : 1u); slot++) {
+			unsigned int base = slot % group_states;
+			unsigned int group = (base % NR_LAYOUTS) ^ (base >= NR_LAYOUTS ? 3u : 0u);
+			bool held = slot >= group_states;
 			xkb_layout_index_t selected = (layouts[num_layouts - 1][group] + held) % num_layouts;
+			int group_table = layout_switch[base % NR_LAYOUTS] |
+					  (base >= NR_LAYOUTS ? (1 << KG_CTRLL) : 0);
 
 			for (unsigned int mods = 0; mods < ARRAY_SIZE(masks); mods++) {
 				xkb_layout_index_t layout;
 				xkb_level_index_t level;
 				xkb_keysym_t sym;
-				int table = layout_switch[group] | (int) mods | (held ? (1 << KG_CTRLR) : 0);
+				int table = group_table | (int) mods | (held ? (1 << KG_CTRLR) : 0);
 				int code;
 
 				/*
@@ -712,6 +750,11 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 
 				if (sym == XKB_KEY_ISO_Next_Group) {
 					code = (group == 0 || group == 3) ? shiftl_lock : shiftr_lock;
+				} else if (sym == XKB_KEY_ISO_First_Group || sym == XKB_KEY_ISO_Last_Group) {
+					/* ISO_Last_Group conventionally locks group 2, not the final group. */
+					unsigned int target = (sym == XKB_KEY_ISO_Last_Group) ? 1u % num_layouts : 0;
+
+					code = xkeymap_select_group(num_layouts, group, target);
 				} else {
 					code = xkeymap_get_code(xkeymap, sym);
 					if (code < 0)

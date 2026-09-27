@@ -360,25 +360,133 @@ test_momentary_group_switch(const char *layouts, const char *variants, unsigned 
 }
 
 static void
-test_group_select_layout(void)
+test_group_select_layout(const char *layouts, const char *variants, unsigned int count, int temporary)
 {
+	static const unsigned int initial_groups[4][8] = {
+		{ 0, 0, 0, 0 },
+		{ 0, 1, 1, 0 },
+		{ 0, 1, 2, 0, 0, 2, 1, 0 },
+		{ 0, 1, 3, 2, 2, 3, 1, 0 },
+	};
+	static const int events[] = {
+		42,
+		58,
+		-58,
+		58,
+		-58,
+		-42, /* Select group 2 twice. */
+		58,
+		-58,
+		58,
+		-58, /* Select group 1 twice. */
+		42,
+		58,
+		-42,
+		-58, /* Release CapsLock after Shift. */
+		58,
+		42,
+		-58,
+		-42, /* Release CapsLock with Shift held. */
+	};
 	struct parsed_keymap keymap;
 	struct xkeymap_params params = {
-		.model = "pc104",
-		.layout = "us,ru",
-		.options = "grp:shift_caps_switch",
+		.model = "pc105",
+		.layout = layouts,
+		.variant = variants,
+		.options = temporary ? "grp:shift_caps_switch,grp:switch" : "grp:shift_caps_switch",
 	};
+	struct xkb_rule_names names = {
+		.rules = "evdev",
+		.model = params.model,
+		.layout = params.layout,
+		.variant = params.variant,
+		.options = params.options,
+	};
+	struct xkb_context *context;
+	struct xkb_keymap *reference;
+	unsigned int states = count > 2 ? 8 : 4;
 
-	init_test_keymap(&keymap, "xkb-us-ru-group-select");
+	init_test_keymap(&keymap, "xkb-group-select");
 	set_xkb_config_root();
 	set_xkb_suppress_warnings();
 
 	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
-		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB us,ru shift_caps_switch layout");
+		kbd_error(EXIT_FAILURE, 0, "Unable to convert XKB shift_caps_switch layout");
 
-	expect_key_symbol(keymap.ctx, 0, 58, "Shift_Lock");
-	expect_key_symbol(keymap.ctx, 1 << KG_SHIFT, 58, "Shift_Lock");
+	if (lk_map_exists(keymap.ctx, 1 << KG_CTRLL) != (count > 2) ||
+	    lk_map_exists(keymap.ctx, 1 << KG_CTRLR) != temporary)
+		kbd_error(EXIT_FAILURE, 0, "Unexpected group table allocation");
 
+	for (int table = 0; table < MAX_NR_KEYMAPS; table++) {
+		if (!lk_map_exists(keymap.ctx, table))
+			continue;
+
+		expect_key_code(keymap.ctx, table, 29, K_CTRL);
+		expect_key_code(keymap.ctx, table, 97, K_CTRL);
+		expect_key_code(keymap.ctx, table, 42, K_SHIFT);
+		expect_key_code(keymap.ctx, table, 28, K_ENTER);
+	}
+
+	context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (!context)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+
+	reference = xkb_keymap_new_from_names(context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	if (!reference)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile reference keymap");
+
+	for (unsigned int initial = 0; initial < states; initial++) {
+		for (int held = 0; held <= temporary; held++) {
+			struct console_state console = { .lock = initial << KG_SHIFTL };
+			struct xkb_state *state = xkb_state_new(reference);
+
+			if (!state)
+				kbd_error(EXIT_FAILURE, 0, "Unable to create reference state");
+
+			xkb_state_update_mask(state, 0, 0, 0, 0, 0, initial_groups[count - 1][initial]);
+
+			if (held) {
+				console_key(keymap.ctx, &console, 100, 1);
+				xkb_state_update_key(state, 100 + 8, XKB_KEY_DOWN);
+			}
+
+			for (size_t i = 0; i < sizeof(events) / sizeof(events[0]); i++) {
+				int event = events[i];
+				int key = event < 0 ? -event : event;
+				int code, expected;
+
+				console_key(keymap.ctx, &console, key, event > 0);
+				xkb_state_update_key(state, (xkb_keycode_t) key + 8,
+						     event > 0 ? XKB_KEY_DOWN : XKB_KEY_UP);
+
+				code = lk_get_key(keymap.ctx, (int) (console.shift ^ console.lock), 16);
+
+				if (KTYP(code) == KT_LETTER)
+					code = K(KT_LATIN, KVAL(code));
+
+				expected = (int) xkb_state_key_get_utf32(state, 16 + 8);
+
+				if (lk_convert_code(keymap.ctx, code, TO_UNICODE) != expected ||
+				    (console.lock & ((1 << KG_SHIFT) | (1 << KG_CTRL))))
+					kbd_error(EXIT_FAILURE, 0,
+						  "Absolute group mismatch: %s state %u held %d event %zu",
+						  layouts, initial, held, i);
+			}
+
+			if (held) {
+				console_key(keymap.ctx, &console, 100, 0);
+				xkb_state_update_key(state, 100 + 8, XKB_KEY_UP);
+			}
+
+			if (console.shift)
+				kbd_error(EXIT_FAILURE, 0, "Modifier stuck after absolute group selection");
+
+			expect_key_symbol(keymap.ctx, (int) console.lock, 16, "q");
+			xkb_state_unref(state);
+		}
+	}
+	xkb_keymap_unref(reference);
+	xkb_context_unref(context);
 	free_test_keymap(&keymap);
 }
 
@@ -476,7 +584,11 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_momentary_group_switch("us,ru,us", ",,dvorak", 3);
 	test_momentary_group_switch("us,ru,us,ru", ",,dvorak,phonetic", 4);
 	test_momentary_group_switch("us,ru,de,gr", NULL, 4);
-	test_group_select_layout();
+	test_group_select_layout("us", NULL, 1, 1);
+	test_group_select_layout("us,ru", NULL, 2, 1);
+	test_group_select_layout("us,ru,us", ",,dvorak", 3, 1);
+	test_group_select_layout("us,ru,us,ru", ",,dvorak,phonetic", 4, 1);
+	test_group_select_layout("us,ru,us,ru", ",,dvorak,phonetic", 4, 0);
 	test_prefer_unicode_does_not_change_xkb_lookup();
 	test_level5_is_not_collapsed_into_alt();
 	test_modifier_mask_lookup_across_layouts();

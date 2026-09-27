@@ -83,9 +83,10 @@ console action `CtrlR`. This uses the independent `KG_CTRLR` bit; ordinary
 left and right Control keys still use `Control` (`KG_CTRL`). The existing
 `KG_SHIFTL` and `KG_SHIFTR` bits continue to select the locked group.
 
-When a keymap contains `Mode_switch`, the converter adds tables 128–191
-alongside tables 0–63. With `KG_CTRLR` set, these tables select the next
-XKB group, wrapping at the total number of groups. Per-key layout fallback
+When a keymap contains `Mode_switch`, the converter adds tables with
+`KG_CTRLR` set: tables 128–191 alongside tables 0–63, or tables 128–255 when
+absolute group selection also requires tables 64–127. These tables select
+the next XKB group, wrapping at the total number of groups. Per-key layout fallback
 is still resolved by libxkbcommon. Releasing the switch clears `KG_CTRLR`
 and returns to the group selected by the locked group bits.
 
@@ -106,6 +107,32 @@ interpreted; conversion assumes the usual `SetGroup(group=+1)` behavior.
 
 The existing limitations of other group actions and of releasing an ordinary
 modifier after its binding changes between groups still apply.
+
+## Absolute group selection
+
+`grp:shift_caps_switch` makes CapsLock select group 1 and Shift+CapsLock
+select group 2. Repeating either combination leaves the same group selected;
+it does not toggle Shift or CapsLock. With a held `grp:switch` key, this
+changes the locked group, and the temporary next-group offset still applies.
+
+The standard XKB interpretations of `ISO_First_Group` and `ISO_Last_Group`
+are `LockGroup(group=1)` and `LockGroup(group=2)`. Despite its name,
+`ISO_Last_Group` selects group 2 even in a keymap with three or four groups.
+Custom interpretations of these keysyms are not evaluated by the converter.
+
+Console lock actions can toggle only one bit at a time. With one or two
+groups, the existing group bits suffice. With three or four groups, some
+absolute selections require both group bits to change. The converter then
+reserves `KG_CTRLL` as an additional locked bit: when set, it inverts both
+`KG_SHIFTL` and `KG_SHIFTR` in the group index used to select the XKB layout.
+Toggling `ShiftL_Lock`, `ShiftR_Lock`, or `CtrlL_Lock` can therefore reach any
+group in a single action. Selecting the current group uses `VoidSymbol`.
+Both physical Control keys continue to use the ordinary `KG_CTRL` bit.
+
+The additional tables 64–127 are generated only for keymaps with more than
+two groups and an absolute group selector. When combined with temporary
+group switching, all 256 console tables are used. `KG_CTRLR` retains its
+independent role as the held group-switch bit.
 
 ## Scope and limitations
 
