@@ -141,6 +141,8 @@ independent role as the held group-switch bit.
   emulator keyboard settings.
 - Loading a console keymap changes the kernel keyboard translation table
   shared by all Linux virtual consoles.
+- Unicode characters at `U+F000` and above cannot be represented as console
+  key bindings and are omitted during conversion.
 - Compose data may depend on the selected locale and installed XKB data.
 - A converted keymap should be tested with `--parse` or `--tkeymap`
   before it is loaded on systems where console input is critical.

@@ -484,6 +484,14 @@ static int xkeymap_get_code(struct xkeymap *xkeymap, xkb_keysym_t symbol)
 	int ret;
 	char symbuf[BUFSIZ];
 
+	/*
+	 * The VT reserves U+F000..U+FFFF for actions and stores 16-bit values.
+	 * Reject unrepresentable characters before name and numeric fallbacks
+	 * can reinterpret their XOR encoding as a kernel action or an ASCII byte.
+	 */
+	if (xkb_keysym_to_utf32(symbol) >= 0xf000)
+		return -1;
+
 	ret = xkeymap_get_code_from_semantic_keysym(xkeymap, symbol);
 	if (ret >= 0)
 		return xkeymap_validate_code(ret);

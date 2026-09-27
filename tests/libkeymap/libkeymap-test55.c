@@ -389,6 +389,67 @@ test_named_character_codes(const char *charset)
 	free_test_keymap(&keymap);
 }
 
+static void
+test_unicode_action_collisions(void)
+{
+	static const char keymap_text[] =
+		"xkb_keymap {"
+		" xkb_keycodes { minimum=8; maximum=10; <BAD>=9; <GOOD>=10; };"
+		" xkb_types { type \"ONE_LEVEL\" { modifiers=None; map[None]=Level1; }; };"
+		" xkb_compatibility {};"
+		" xkb_symbols { key <BAD> { [ UF701 ] }; key <GOOD> { [ UEFFF ] }; };"
+		"};";
+	static const uint32_t supplementary[] = { 0x10000, 0x1f600, 0x10ffff };
+	struct parsed_keymap keymap;
+	struct xkeymap xkeymap = { 0 };
+
+	init_test_keymap(&keymap, "xkb-unicode-action-collisions");
+	xkeymap.ctx = keymap.ctx;
+
+	/* Every value in this range would overlap a kernel symbol type. */
+	for (uint32_t unicode = 0xf000; unicode <= 0xffff; unicode++) {
+		if (xkeymap_get_code(&xkeymap, 0x01000000 | unicode) >= 0)
+			kbd_error(EXIT_FAILURE, 0, "Unrepresentable U+%04X became a console binding", unicode);
+	}
+
+	for (size_t i = 0; i < ARRAY_SIZE(supplementary); i++) {
+		if (xkeymap_get_code(&xkeymap, 0x01000000 | supplementary[i]) >= 0)
+			kbd_error(EXIT_FAILURE, 0, "Supplementary Unicode became a console binding");
+	}
+
+	if (xkeymap_get_code(&xkeymap, 0x0100e000) != (0xe000 ^ 0xf000) ||
+	    xkeymap_get_code(&xkeymap, 0x0100efff) != (0xefff ^ 0xf000) ||
+	    xkeymap_get_code(&xkeymap, XKB_KEY_ISO_Level3_Shift) != K_ALTGR)
+		kbd_error(EXIT_FAILURE, 0, "Unicode boundary or real AltGr binding changed");
+
+	xkeymap.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+
+	if (!xkeymap.xkb)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+
+	xkeymap.keymap = xkb_keymap_new_from_string(xkeymap.xkb, keymap_text,
+						    XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	if (!xkeymap.keymap)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile Unicode boundary keymap");
+
+	if (xkeymap_walk(&xkeymap) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to convert Unicode boundary keymap");
+
+	for (int table = 0; table < MAX_NR_KEYMAPS; table++) {
+		if (!lk_map_exists(keymap.ctx, table))
+			continue;
+
+		if (lk_get_key(keymap.ctx, table, 1) != K_HOLE ||
+		    lk_get_key(keymap.ctx, table, 2) != (0xefff ^ 0xf000))
+			kbd_error(EXIT_FAILURE, 0, "Unicode character became an action in table %d", table);
+	}
+
+	tdestroy(xkeymap.reachable_syms, free);
+	xkb_keymap_unref(xkeymap.keymap);
+	xkb_context_unref(xkeymap.xkb);
+	free_test_keymap(&keymap);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
@@ -403,6 +464,7 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_distinct_dead_key_actions();
 	test_named_character_codes("iso-8859-1");
 	test_named_character_codes("iso-8859-2");
+	test_unicode_action_collisions();
 
 	return EXIT_SUCCESS;
 }
