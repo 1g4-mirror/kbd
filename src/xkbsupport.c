@@ -1496,6 +1496,31 @@ xkeymap_rmlvo_check(const struct xkb_rule_names *names)
 	return XKEYMAP_RMLVO_OK;
 }
 
+static bool xkeymap_has_shifts_toggle(const char *options)
+{
+	const char unsupported[] = "grp:shifts_toggle";
+
+	/* A NULL option list lets libxkbcommon use the environment default. */
+	if (!options)
+		options = getenv("XKB_DEFAULT_OPTIONS");
+	while (options && *options) {
+		const char *next = strchr(options, ',');
+		size_t len = strcspn(options, ",!");
+
+		/* Ignore surrounding whitespace and an optional XKB group suffix. */
+		while (len && isspace((unsigned char) *options)) {
+			options++;
+			len--;
+		}
+		while (len && isspace((unsigned char) options[len - 1]))
+			len--;
+		if (len == sizeof(unsupported) - 1 && memcmp(options, unsupported, len) == 0)
+			return true;
+		options = next ? next + 1 : NULL;
+	}
+	return false;
+}
+
 int convert_xkb_keymap(struct lk_ctx *ctx, struct xkeymap_params *params)
 {
 	struct xkeymap xkeymap = { 0 };
@@ -1512,6 +1537,12 @@ int convert_xkb_keymap(struct lk_ctx *ctx, struct xkeymap_params *params)
 	};
 
 	xkeymap.ctx = ctx;
+
+	/* VT releases use the current table, so a group action can hide Shift release. */
+	if (xkeymap_has_shifts_toggle(names.options)) {
+		XKEYMAP_WARNING(0, _("unsupported xkb option `grp:shifts_toggle': switching groups with both Shift keys can leave Shift stuck on the Linux console"));
+		goto end;
+	}
 
 	lk_set_keywords(ctx, LK_KEYWORD_ALTISMETA | LK_KEYWORD_STRASUSUAL);
 

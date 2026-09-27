@@ -69,6 +69,22 @@ richer input model than the kernel console keymap interface, so conversion
 necessarily preserves the behavior that can be expressed through the
 Linux virtual console.
 
+## Unsupported group switching options
+
+`grp:shifts_toggle` is rejected with an error, including when it appears
+in a comma-separated option list or is inherited from `XKB_DEFAULT_OPTIONS`.
+The converter does not silently remove it.
+
+This option gives each Shift key two roles: holding Shift and switching
+groups when the other Shift is held. The Linux console looks up key
+releases in the current modifier table, without remembering the action
+used at key press. After switching groups, releasing Shift can therefore
+select a group-switch action instead of releasing the modifier, leaving
+Shift stuck. Use another switching option, such as `grp:caps_toggle`.
+
+This check rejects the named option; it does not detect every custom XKB
+configuration that assigns similar roles to modifier keys.
+
 ## Temporary group switching
 
 `grp:switch` uses RightAlt to select the next group while the key is held.

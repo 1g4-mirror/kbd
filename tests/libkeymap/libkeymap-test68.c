@@ -25,6 +25,8 @@ set_xkb_suppress_warnings(void)
 {
 	if (setenv("LK_XKB_SUPPRESS_WARNINGS", "1", 1) != 0)
 		kbd_error(EXIT_FAILURE, errno, "unable to set LK_XKB_SUPPRESS_WARNINGS");
+	if (setenv("XKB_LOG_LEVEL", "critical", 1) != 0)
+		kbd_error(EXIT_FAILURE, errno, "unable to set XKB_LOG_LEVEL");
 }
 
 /*
@@ -58,6 +60,60 @@ expect_rmlvo(const char *what,
 		kbd_error(EXIT_FAILURE, 0, "RMLVO was accepted, but must be rejected: %s", what);
 }
 
+static void
+expect_options(const char *options, int want_accepted)
+{
+	struct parsed_keymap keymap;
+	struct xkeymap_params params = {
+		.model = "pc105",
+		.layout = "us,ru",
+		.options = options,
+	};
+	int ret;
+
+	init_test_keymap(&keymap, "xkb-options");
+	ret = convert_xkb_keymap(keymap.ctx, &params);
+	if ((ret == 0) != want_accepted)
+		kbd_error(EXIT_FAILURE, 0, "Unexpected conversion result for options %s: %d",
+			  options ? options : "(default)", ret);
+	if (!want_accepted) {
+		for (int table = 0; table < MAX_NR_KEYMAPS; table++) {
+			if (lk_map_exists(keymap.ctx, table))
+				kbd_error(EXIT_FAILURE, 0, "Rejected options populated table %d", table);
+		}
+	}
+	free_test_keymap(&keymap);
+}
+
+static void
+test_unsupported_options(void)
+{
+	const char *env = getenv("XKB_DEFAULT_OPTIONS");
+	char *saved = env ? strdup(env) : NULL;
+
+	if (env && !saved)
+		kbd_error(EXIT_FAILURE, errno, "Unable to save XKB_DEFAULT_OPTIONS");
+
+	expect_options("grp:shifts_toggle", 0);
+	expect_options("grp:shifts_toggle,grp:caps_toggle", 0);
+	expect_options("grp:caps_toggle,grp:shifts_toggle,grp:switch", 0);
+	expect_options("grp:caps_toggle,grp:shifts_toggle", 0);
+	expect_options(",, grp:shifts_toggle ,", 0);
+	expect_options("grp:shifts_toggle!1", 0);
+	expect_options("grp:caps_toggle", 1);
+	expect_options("grp:shifts_toggle_extra", 1);
+	expect_options("prefix_grp:shifts_toggle", 1);
+
+	if (setenv("XKB_DEFAULT_OPTIONS", "grp:shifts_toggle", 1) != 0)
+		kbd_error(EXIT_FAILURE, errno, "Unable to set XKB_DEFAULT_OPTIONS");
+	expect_options(NULL, 0);
+	expect_options("", 1);
+	expect_options("grp:caps_toggle", 1);
+	if ((saved ? setenv("XKB_DEFAULT_OPTIONS", saved, 1) : unsetenv("XKB_DEFAULT_OPTIONS")) != 0)
+		kbd_error(EXIT_FAILURE, errno, "Unable to restore XKB_DEFAULT_OPTIONS");
+	free(saved);
+}
+
 int
 main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
@@ -85,6 +141,8 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 
 	/* Unrecognized variant.  Previously only rejected at the symbols compile step. */
 	expect_rmlvo("pc104/us(not_a_variant_xyz)", "pc104", "us",    "not_a_variant_xyz", 0);
+
+	test_unsupported_options();
 
 	return EXIT_SUCCESS;
 }
