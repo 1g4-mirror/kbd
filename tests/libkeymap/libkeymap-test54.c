@@ -491,6 +491,116 @@ test_group_select_layout(const char *layouts, const char *variants, unsigned int
 }
 
 static void
+test_previous_group(const char *layouts, unsigned int count, int temporary)
+{
+	static const unsigned int initial_groups[4][8] = {
+		{ 0, 0, 0, 0 },
+		{ 0, 1, 1, 0 },
+		{ 0, 1, 2, 0, 0, 2, 1, 0 },
+		{ 0, 1, 3, 2, 2, 3, 1, 0 },
+	};
+	struct parsed_keymap keymap;
+	struct xkeymap_params params = {
+		.model = "pc105",
+		.layout = layouts,
+		.options = temporary ? "local:previous_group,grp:switch" : "local:previous_group",
+	};
+	struct xkb_rule_names names = {
+		.rules = "evdev",
+		.model = params.model,
+		.layout = params.layout,
+		.options = params.options,
+	};
+	struct xkb_context *context;
+	struct xkb_keymap *reference;
+	unsigned int states = count > 2 ? 8 : 4;
+
+	init_test_keymap(&keymap, "xkb-previous-group");
+	set_xkb_config_root();
+	set_xkb_suppress_warnings();
+	if (convert_xkb_keymap(keymap.ctx, &params) != 0)
+		kbd_error(EXIT_FAILURE, 0, "Unable to convert previous-group keymap");
+
+	if (lk_map_exists(keymap.ctx, 1 << KG_CTRLL) != (count > 2) ||
+	    lk_map_exists(keymap.ctx, 1 << KG_CTRLR) != temporary)
+		kbd_error(EXIT_FAILURE, 0, "Unexpected previous-group table allocation");
+
+	for (int table = 0; table < MAX_NR_KEYMAPS; table++) {
+		if (!lk_map_exists(keymap.ctx, table))
+			continue;
+		expect_key_code(keymap.ctx, table, 58, lk_get_key(keymap.ctx, table & ~15, 58));
+		expect_key_code(keymap.ctx, table, 29, K_CTRL);
+		expect_key_code(keymap.ctx, table, 97, K_CTRL);
+		expect_key_code(keymap.ctx, table, 42, K_SHIFT);
+		expect_key_code(keymap.ctx, table, 28, K_ENTER);
+	}
+
+	context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (!context)
+		kbd_error(EXIT_FAILURE, 0, "Unable to create XKB context");
+	reference = xkb_keymap_new_from_names(context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	if (!reference)
+		kbd_error(EXIT_FAILURE, 0, "Unable to compile previous-group reference");
+
+	for (unsigned int initial = 0; initial < states; initial++) {
+		for (int held = 0; held <= temporary; held++) {
+			struct console_state console = { .lock = initial << KG_SHIFTL };
+			struct xkb_state *state = xkb_state_new(reference);
+
+			if (!state)
+				kbd_error(EXIT_FAILURE, 0, "Unable to create reference state");
+			xkb_state_update_mask(state, 0, 0, 0, 0, 0, initial_groups[count - 1][initial]);
+			if (held) {
+				console_key(keymap.ctx, &console, 100, 1);
+				xkb_state_update_key(state, 108, XKB_KEY_DOWN);
+			}
+
+			/* Two full backward cycles, comparing both press and release. */
+			for (unsigned int event = 0; event < 4 * count; event++) {
+				int pressed = !(event & 1);
+				int action = console_key(keymap.ctx, &console, 58, pressed);
+				int code;
+
+				xkb_state_update_key(state, 66, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
+				if (count == 1 && action != K_HOLE)
+					kbd_error(EXIT_FAILURE, 0, "Previous group must be a no-op for one layout");
+				if (console.lock & ((1 << KG_SHIFT) | (1 << KG_CTRL)))
+					kbd_error(EXIT_FAILURE, 0, "Previous group locked an ordinary modifier");
+
+				/* Y differs in all four layouts: y, Cyrillic en, z, upsilon. */
+				code = lk_get_key(keymap.ctx, (int) (console.shift ^ console.lock), 21);
+				if (KTYP(code) == KT_LETTER)
+					code = K(KT_LATIN, KVAL(code));
+				if (lk_convert_code(keymap.ctx, code, TO_UNICODE) !=
+				    (int) xkb_state_key_get_utf32(state, 29))
+					kbd_error(EXIT_FAILURE, 0,
+						  "Previous-group mismatch: %s initial %u held %d event %u",
+						  layouts, initial, held, event);
+			}
+
+			if (held) {
+				int code;
+
+				console_key(keymap.ctx, &console, 100, 0);
+				xkb_state_update_key(state, 108, XKB_KEY_UP);
+				code = lk_get_key(keymap.ctx, (int) (console.shift ^ console.lock), 21);
+				if (KTYP(code) == KT_LETTER)
+					code = K(KT_LATIN, KVAL(code));
+				if (lk_convert_code(keymap.ctx, code, TO_UNICODE) !=
+				    (int) xkb_state_key_get_utf32(state, 29))
+					kbd_error(EXIT_FAILURE, 0, "Previous group lost after switch release");
+			}
+			if (console.shift)
+				kbd_error(EXIT_FAILURE, 0, "Modifier stuck after previous-group selection");
+			xkb_state_unref(state);
+		}
+	}
+	xkb_keymap_unref(reference);
+	xkb_context_unref(context);
+	free_test_keymap(&keymap);
+}
+
+static void
 test_prefer_unicode_does_not_change_xkb_lookup(void)
 {
 	struct parsed_keymap keymap;
@@ -589,6 +699,14 @@ main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 	test_group_select_layout("us,ru,us", ",,dvorak", 3, 1);
 	test_group_select_layout("us,ru,us,ru", ",,dvorak,phonetic", 4, 1);
 	test_group_select_layout("us,ru,us,ru", ",,dvorak,phonetic", 4, 0);
+	test_previous_group("us", 1, 0);
+	test_previous_group("us,ru", 2, 0);
+	test_previous_group("us,ru,de", 3, 0);
+	test_previous_group("us,ru,de,gr", 4, 0);
+	test_previous_group("us", 1, 1);
+	test_previous_group("us,ru", 2, 1);
+	test_previous_group("us,ru,de", 3, 1);
+	test_previous_group("us,ru,de,gr", 4, 1);
 	test_prefer_unicode_does_not_change_xkb_lookup();
 	test_level5_is_not_collapsed_into_alt();
 	test_modifier_mask_lookup_across_layouts();

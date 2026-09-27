@@ -543,6 +543,7 @@
   $azerty	caps:digits_row_independent_lock	= +capslock(digits_row_independent_lock):4
 
 ! option                         = symbols
+  local:previous_group           = +local(previous_group)
   grp:shift_caps_switch          = +group(caps_select)
   grp:win_menu_switch            = +group(win_menu_select)
   grp:lctrl_rctrl_switch         = +group(ctrl_select)

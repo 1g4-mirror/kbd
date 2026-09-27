@@ -633,7 +633,8 @@ static unsigned int xkeymap_group_features(struct xkb_keymap *keymap, xkb_keycod
 			/* Mode_switch and ISO_Group_Shift are aliases. */
 			if (syms[0] == XKB_KEY_Mode_switch)
 				features |= XKEYMAP_GROUP_SWITCH;
-			else if (syms[0] == XKB_KEY_ISO_First_Group || syms[0] == XKB_KEY_ISO_Last_Group)
+			else if (syms[0] == XKB_KEY_ISO_First_Group || syms[0] == XKB_KEY_ISO_Last_Group ||
+				 syms[0] == XKB_KEY_ISO_Prev_Group)
 				features |= XKEYMAP_GROUP_SELECT;
 		}
 	}
@@ -758,6 +759,11 @@ static int xkeymap_walk(struct xkeymap *xkeymap)
 
 				if (sym == XKB_KEY_ISO_Next_Group) {
 					code = (group == 0 || group == 3) ? shiftl_lock : shiftr_lock;
+				} else if (sym == XKB_KEY_ISO_Prev_Group) {
+					/* LockGroup(-1) changes the locked group, not the held offset. */
+					unsigned int target = (layouts[num_layouts - 1][group] + num_layouts - 1) % num_layouts;
+
+					code = xkeymap_select_group(num_layouts, group, target);
 				} else if (sym == XKB_KEY_ISO_First_Group || sym == XKB_KEY_ISO_Last_Group) {
 					/* ISO_Last_Group conventionally locks group 2, not the final group. */
 					unsigned int target = (sym == XKB_KEY_ISO_Last_Group) ? 1u % num_layouts : 0;

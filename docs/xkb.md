@@ -101,10 +101,11 @@ left and right Control keys still use `Control` (`KG_CTRL`). The existing
 
 When a keymap contains `Mode_switch`, the converter adds tables with
 `KG_CTRLR` set: tables 128–191 alongside tables 0–63, or tables 128–255 when
-absolute group selection also requires tables 64–127. These tables select
-the next XKB group, wrapping at the total number of groups. Per-key layout fallback
-is still resolved by libxkbcommon. Releasing the switch clears `KG_CTRLR`
-and returns to the group selected by the locked group bits.
+absolute or previous-group selection also requires tables 64–127. These
+tables select the next XKB group, wrapping at the total number of groups.
+Per-key layout fallback is still resolved by libxkbcommon. Releasing the
+switch clears `KG_CTRLR` and returns to the group selected by the locked
+group bits.
 
 The console looks up key releases in the current table, without remembering
 the action used at key press. In the extra tables, every key that can produce
@@ -146,9 +147,22 @@ group in a single action. Selecting the current group uses `VoidSymbol`.
 Both physical Control keys continue to use the ordinary `KG_CTRL` bit.
 
 The additional tables 64–127 are generated only for keymaps with more than
-two groups and an absolute group selector. When combined with temporary
-group switching, all 256 console tables are used. `KG_CTRLR` retains its
-independent role as the held group-switch bit.
+two groups and an absolute or previous-group selector. When combined with
+temporary group switching, all 256 console tables are used. `KG_CTRLR`
+retains its independent role as the held group-switch bit.
+
+## Previous group selection
+
+`ISO_Prev_Group` follows the standard XKB interpretation
+`LockGroup(group=-1)`: it selects the previous locked group, wrapping from
+the first group to the last. With one layout it produces `VoidSymbol`.
+With three or four layouts it uses the additional `KG_CTRLL` tables
+described above so that every backward transition takes one action.
+
+When `grp:switch` is held, the temporary next-group offset remains applied;
+releasing it reveals the newly selected locked group. Custom XKB actions
+attached to `ISO_Prev_Group` are not interpreted. Supporting this keysym
+does not remove the modifier-release limitation of `grp:shifts_toggle`.
 
 ## Scope and limitations
 

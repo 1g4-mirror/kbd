@@ -6,3 +6,9 @@ xkb_symbols "group2_level3_probe" {
 
 	include "level3(ralt_switch)"
 };
+
+// A dedicated group key avoids the modifier-release ambiguity of shifts_toggle.
+partial modifier_keys
+xkb_symbols "previous_group" {
+	key <CAPS> { type[Group1] = "ONE_LEVEL", [ ISO_Prev_Group ] };
+};
